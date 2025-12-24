@@ -22,18 +22,18 @@ jobs:
         use-mamba: true
 
     - name: Create mlruns folder
-      run: mkdir -p mlruns
+      run: mkdir -p $GITHUB_WORKSPACE/mlruns
 
     - name: Set MLFLOW_TRACKING_URI
-      run: echo "MLFLOW_TRACKING_URI=${GITHUB_WORKSPACE}/mlruns" >> $GITHUB_ENV
+      run: echo "MLFLOW_TRACKING_URI=$GITHUB_WORKSPACE/mlruns" >> $GITHUB_ENV
+
+    - name: Dagshub login
+      run: |
+        conda run -n mlflow-env dagshub login --token ${{ secrets.DAGSHUB_TOKEN }}
 
     - name: Create MLflow experiment if not exists
       run: |
         conda run -n mlflow-env mlflow experiments create --experiment-name "Titanic-Advanced-Tuning" || echo "Experiment already exists"
-    
-    - name: Dagshub login
-      run: |
-        conda run -n mlflow-env dagshub login --token ${{ secrets.DAGSHUB_TOKEN }}
 
     - name: Set MLFLOW_EXPERIMENT_NAME
       run: echo "MLFLOW_EXPERIMENT_NAME=Titanic-Advanced-Tuning" >> $GITHUB_ENV
@@ -45,4 +45,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: mlruns
-        path: mlruns/
+        path: $GITHUB_WORKSPACE/mlruns/
