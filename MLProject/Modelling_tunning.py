@@ -26,6 +26,10 @@ X_test = pd.read_csv(os.path.join(base_path, "processed_data", "X_test.csv"))
 y_train = pd.read_csv(os.path.join(base_path, "processed_data", "y_train.csv"))
 y_test = pd.read_csv(os.path.join(base_path, "processed_data", "y_test.csv"))
 
+# Pastikan y_train & y_test 1D array, supaya sklearn gak warning
+y_train = y_train.values.ravel()
+y_test = y_test.values.ravel()
+
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test = X_test.select_dtypes(include=["int64", "float64"])
 
@@ -57,18 +61,16 @@ for n_estimators in n_estimators_list:
 
             # Log model
             mlflow.sklearn.log_model(model, artifact_path="model", registered_model_name=None)
-            
 
-            # Advanced: Log artifacts
+            # Log artifacts
+            os.makedirs("artifacts", exist_ok=True)
 
             # 1. Confusion Matrix
             cm = confusion_matrix(y_test, y_pred)
+            cm_path = f"artifacts/cm_{n_estimators}_{max_depth}.png"
             plt.figure()
             sns.heatmap(cm, annot=True, fmt="d")
             plt.title("Confusion Matrix")
-
-            os.makedirs("artifacts", exist_ok=True)
-            cm_path = f"artifacts/cm_{n_estimators}_{max_depth}.png"
             plt.savefig(cm_path)
             plt.close()
             mlflow.log_artifact(cm_path)
@@ -78,9 +80,11 @@ for n_estimators in n_estimators_list:
                 "feature": X_train.columns,
                 "importance": model.feature_importances_
             }).sort_values(by="importance", ascending=False)
-
             fi_path = f"artifacts/feature_importance_{n_estimators}_{max_depth}.csv"
             fi.to_csv(fi_path, index=False)
             mlflow.log_artifact(fi_path)
 
             print(f"Run selesai | acc={acc}")
+
+# Setelah semua run selesai, push semua ke Dagshub
+dagshub.mlflow_push()
