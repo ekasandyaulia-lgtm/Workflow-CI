@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 import seaborn as sns
 import os
 
+# MLflow Tracking ke Dagshub
 mlflow.set_tracking_uri("https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow")
 
 # Dagshub integration
@@ -26,7 +27,7 @@ X_test = pd.read_csv(os.path.join(base_path, "processed_data", "X_test.csv"))
 y_train = pd.read_csv(os.path.join(base_path, "processed_data", "y_train.csv"))
 y_test = pd.read_csv(os.path.join(base_path, "processed_data", "y_test.csv"))
 
-# Pastikan y_train & y_test 1D array, supaya sklearn gak warning
+# Convert y menjadi 1D array untuk sklearn
 y_train = y_train.values.ravel()
 y_test = y_test.values.ravel()
 
@@ -39,44 +40,43 @@ max_depth_list = [5, 10]
 
 for n_estimators in n_estimators_list:
     for max_depth in max_depth_list:
-
         with mlflow.start_run():
             # Log parameter
             mlflow.log_param("n_estimators", n_estimators)
             mlflow.log_param("max_depth", max_depth)
 
+            # Build model
             model = RandomForestClassifier(
                 n_estimators=n_estimators,
                 max_depth=max_depth,
                 random_state=42
             )
-
             model.fit(X_train, y_train)
 
+            # Predict dan evaluasi
             y_pred = model.predict(X_test)
             acc = accuracy_score(y_test, y_pred)
-
-            # Log metric
             mlflow.log_metric("accuracy", acc)
 
-            # Log model
-            mlflow.sklearn.log_model(sk_model=model, name="model", registered_model_name=None)
+            # Log model ke MLflow/Dagshub
+            mlflow.sklearn.log_model(
+                sk_model=model,
+                name="model",
+                registered_model_name=None
+            )
 
-
-            # Log artifacts
-            os.makedirs("artifacts", exist_ok=True)
-
-            # 1. Confusion Matrix
+            # Log Confusion Matrix
             cm = confusion_matrix(y_test, y_pred)
-            cm_path = f"artifacts/cm_{n_estimators}_{max_depth}.png"
             plt.figure()
             sns.heatmap(cm, annot=True, fmt="d")
             plt.title("Confusion Matrix")
+            os.makedirs("artifacts", exist_ok=True)
+            cm_path = f"artifacts/cm_{n_estimators}_{max_depth}.png"
             plt.savefig(cm_path)
             plt.close()
             mlflow.log_artifact(cm_path)
 
-            # 2. Feature Importance
+            # Log Feature Importance
             fi = pd.DataFrame({
                 "feature": X_train.columns,
                 "importance": model.feature_importances_
@@ -87,5 +87,5 @@ for n_estimators in n_estimators_list:
 
             print(f"Run selesai | acc={acc}")
 
-# Setelah semua run selesai, push semua ke Dagshub
+# Push semua ke Dagshub 
 dagshub.mlflow_push()
