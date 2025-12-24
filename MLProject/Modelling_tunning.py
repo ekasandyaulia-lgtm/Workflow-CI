@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import mlflow
 import mlflow.sklearn
@@ -7,19 +6,18 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 import seaborn as sns
+import os
 
-# --- Dagshub integration ---
+# Dagshub integration
 dagshub.init(
     repo_owner="ekasandyaulia-lgtm",
     repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
     mlflow=True
 )
 
-# --- Setup MLflow tracking ---
-mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "mlruns"))
-mlflow.set_experiment(os.environ.get("MLFLOW_EXPERIMENT_NAME", "Titanic-Advanced-Tuning"))
+mlflow.set_experiment("Titanic-Advanced-Tuning")
 
-# --- Load data hasil preprocessing ---
+# Load data hasil preprocessing
 base_path = os.path.dirname(__file__)
 X_train = pd.read_csv(os.path.join(base_path, "processed_data", "X_train.csv"))
 X_test = pd.read_csv(os.path.join(base_path, "processed_data", "X_test.csv"))
@@ -29,7 +27,7 @@ y_test = pd.read_csv(os.path.join(base_path, "processed_data", "y_test.csv"))
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test = X_test.select_dtypes(include=["int64", "float64"])
 
-# --- Hyperparameter tuning ---
+# Hyperparameter tuning
 n_estimators_list = [50, 100]
 max_depth_list = [5, 10]
 
@@ -58,14 +56,15 @@ for n_estimators in n_estimators_list:
             # Log model
             mlflow.sklearn.log_model(model, "model")
 
-            # --- Log artifacts ---
-            os.makedirs("artifacts", exist_ok=True)
+            # Advanced: Log artifacts
 
             # 1. Confusion Matrix
             cm = confusion_matrix(y_test, y_pred)
             plt.figure()
             sns.heatmap(cm, annot=True, fmt="d")
             plt.title("Confusion Matrix")
+
+            os.makedirs("artifacts", exist_ok=True)
             cm_path = f"artifacts/cm_{n_estimators}_{max_depth}.png"
             plt.savefig(cm_path)
             plt.close()
@@ -76,6 +75,7 @@ for n_estimators in n_estimators_list:
                 "feature": X_train.columns,
                 "importance": model.feature_importances_
             }).sort_values(by="importance", ascending=False)
+
             fi_path = f"artifacts/feature_importance_{n_estimators}_{max_depth}.csv"
             fi.to_csv(fi_path, index=False)
             mlflow.log_artifact(fi_path)
