@@ -8,6 +8,8 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 import seaborn as sns
 import os
 
+mlflow.set_tracking_uri("https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow")
+
 # Dagshub integration
 dagshub.init(
     repo_owner="ekasandyaulia-lgtm",
