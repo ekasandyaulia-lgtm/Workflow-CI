@@ -30,6 +30,10 @@ jobs:
     - name: Create MLflow experiment if not exists
       run: |
         conda run -n mlflow-env mlflow experiments create --experiment-name "Titanic-Advanced-Tuning" || echo "Experiment already exists"
+    
+    - name: Dagshub login
+      run: |
+      conda run -n mlflow-env dagshub login --token ${{ secrets.DAGSHUB_TOKEN }}
 
     - name: Set MLFLOW_EXPERIMENT_NAME
       run: echo "MLFLOW_EXPERIMENT_NAME=Titanic-Advanced-Tuning" >> $GITHUB_ENV
