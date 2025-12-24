@@ -16,9 +16,11 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
-        python-version: 3.10
+        python-version: 3.10.19
         environment-file: MLProject/conda.yaml
         activate-environment: mlflow-env
+        use-mamba: true
+
 
     - name: Create mlruns folder
       run: mkdir -p mlruns
