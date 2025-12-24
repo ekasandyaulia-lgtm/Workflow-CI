@@ -18,6 +18,7 @@ dagshub.init(
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
 # Load data hasil preprocessing
+base_path = os.path.dirname(__file__)
 X_train = pd.read_csv("processed_data/X_train.csv")
 X_test = pd.read_csv("processed_data/X_test.csv")
 y_train = pd.read_csv("processed_data/y_train.csv").values.ravel()
