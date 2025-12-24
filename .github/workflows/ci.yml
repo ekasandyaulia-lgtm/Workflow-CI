@@ -15,13 +15,9 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v3
       with:
-        auto-activate-base: true
+        auto-activate-base: false
         python-version: "3.10"
-
-    - name: Install MLflow
-      run: |
-        pip install mlflow
-
+        
     - name: Run MLflow Project
       run: |
         mlflow run MLProject
