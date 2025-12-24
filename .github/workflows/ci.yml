@@ -27,19 +27,14 @@ jobs:
     - name: Set MLFLOW_TRACKING_URI
       run: echo "MLFLOW_TRACKING_URI=$GITHUB_WORKSPACE/mlruns" >> $GITHUB_ENV
 
-    - name: Dagshub login
-      run: |
-        conda run -n mlflow-env dagshub login --token ${{ secrets.DAGSHUB_TOKEN }}
-
-    - name: Create MLflow experiment if not exists
-      run: |
-        conda run -n mlflow-env mlflow experiments create --experiment-name "Titanic-Advanced-Tuning" || echo "Experiment already exists"
-
     - name: Set MLFLOW_EXPERIMENT_NAME
       run: echo "MLFLOW_EXPERIMENT_NAME=Titanic-Advanced-Tuning" >> $GITHUB_ENV
 
-    - name: Run MLflow Project
-      run: conda run -n mlflow-env mlflow run MLProject --env-manager=local
+    - name: Dagshub login
+      run: conda run -n mlflow-env dagshub login --token ${{ secrets.DAGSHUB_TOKEN }}
+
+    - name: Run Modelling Tunning
+      run: conda run -n mlflow-env python MLProject/Modelling_tunning.py
 
     - name: Upload MLflow artifacts
       uses: actions/upload-artifact@v4
