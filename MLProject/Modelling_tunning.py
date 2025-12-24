@@ -1,20 +1,34 @@
 import pandas as pd
 import mlflow
 import mlflow.sklearn
-import dagshub
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 import seaborn as sns
 import os
+import dagshub  # Tetap import, tapi akan dikontrol kondisinya
 
-# Dagshub integration
-dagshub.init(
-    repo_owner="ekasandyaulia-lgtm",
-    repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
-    mlflow=True
-)
+# --- PERUBAHAN KRITIS: Deteksi Environment CI ---
+# Periksa apakah kode sedang berjalan di GitHub Actions
+SEDANG_DI_CI = os.environ.get('CI') == 'true'
 
+if not SEDANG_DI_CI:
+    # HANYA jalan di komputer lokal (development)
+    print("🔥 Mode: PENGEMBANGAN LOKAL")
+    print("Menghubungkan ke DagsHub... (akan meminta login via browser)")
+    dagshub.init(
+        repo_owner="ekasandyaulia-lgtm",
+        repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
+        mlflow=True
+    )
+else:
+    # Jalan di GitHub Actions (CI/CD)
+    print("🤖 Mode: CI/CD (GitHub Actions)")
+    print("Menggunakan MLflow tracking lokal...")
+    # Simpan semua hasil di folder 'mlruns' dalam project ini
+    mlflow.set_tracking_uri("file://${PWD}/mlruns")
+
+# --- KODE INI JALAN DI SEMUA MODE ---
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
 # Load data hasil preprocessing
@@ -79,4 +93,4 @@ for n_estimators in n_estimators_list:
             fi.to_csv(fi_path, index=False)
             mlflow.log_artifact(fi_path)
 
-            print(f"Run selesai | acc={acc}")
+            print(f"✅ Run selesai | n_estimators={n_estimators}, max_depth={max_depth}, acc={acc:.4f}")
