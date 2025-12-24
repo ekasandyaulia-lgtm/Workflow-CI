@@ -1,26 +1,19 @@
 import pandas as pd
 import mlflow
 import mlflow.sklearn
+import dagshub
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 import seaborn as sns
 import os
-import dagshub 
 
-SEDANG_DI_CI = os.environ.get('CI') == 'true'
-
-if not SEDANG_DI_CI:
-    print("Menghubungkan ke DagsHub")
-    dagshub.init(
-        repo_owner="ekasandyaulia-lgtm",
-        repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
-        mlflow=True
-    )
-else:
-    print(" Mode: CI/CD (GitHub Actions)")
-    print("Menggunakan MLflow tracking lokal...")
-    mlflow.set_tracking_uri("file:mlruns") 
+# Dagshub integration
+dagshub.init(
+    repo_owner="ekasandyaulia-lgtm",
+    repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
+    mlflow=True
+)
 
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
@@ -86,4 +79,4 @@ for n_estimators in n_estimators_list:
             fi.to_csv(fi_path, index=False)
             mlflow.log_artifact(fi_path)
 
-            print(f"✅ Run selesai | n_estimators={n_estimators}, max_depth={max_depth}, acc={acc:.4f}")
+            print(f"Run selesai | acc={acc}")
