@@ -56,7 +56,7 @@ for n_estimators in n_estimators_list:
             mlflow.log_metric("accuracy", acc)
 
             # Log model
-            mlflow.sklearn.log_model(model, artifact ="model", registered_model_name=None)
+            mlflow.sklearn.log_model(model, artifact_path="model", registered_model_name=None)
             
 
             # Advanced: Log artifacts
