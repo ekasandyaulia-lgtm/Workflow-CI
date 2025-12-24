@@ -12,5 +12,5 @@ dependencies:
       - numpy
       - matplotlib
       - seaborn
-      - dagshub   # kalau Advanced pakai DagsHub
-      - jupyter   # opsional, kalau ingin notebook
+      - dagshub  
+      - jupyter   
