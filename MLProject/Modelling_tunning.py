@@ -8,9 +8,10 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 import seaborn as sns
 import os
 
-mlflow.set_tracking_uri("https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow")
+mlflow.set_tracking_uri(
+    "https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
+)
 
-# Dagshub integration
 dagshub.init(
     repo_owner="ekasandyaulia-lgtm",
     repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
@@ -19,7 +20,10 @@ dagshub.init(
 
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
-# Load data hasil preprocessing
+# auto log
+mlflow.autolog(log_models=True)
+
+# Load data
 base_path = os.path.dirname(__file__)
 X_train = pd.read_csv(os.path.join(base_path, "processed_data", "X_train.csv"))
 X_test = pd.read_csv(os.path.join(base_path, "processed_data", "X_test.csv"))
@@ -29,7 +33,6 @@ y_test = pd.read_csv(os.path.join(base_path, "processed_data", "y_test.csv"))
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test = X_test.select_dtypes(include=["int64", "float64"])
 
-# Hyperparameter tuning
 n_estimators_list = [50, 100]
 max_depth_list = [5, 10]
 
@@ -37,9 +40,6 @@ for n_estimators in n_estimators_list:
     for max_depth in max_depth_list:
 
         with mlflow.start_run():
-            # Log parameter
-            mlflow.log_param("n_estimators", n_estimators)
-            mlflow.log_param("max_depth", max_depth)
 
             model = RandomForestClassifier(
                 n_estimators=n_estimators,
@@ -52,28 +52,19 @@ for n_estimators in n_estimators_list:
             y_pred = model.predict(X_test)
             acc = accuracy_score(y_test, y_pred)
 
-            # Log metric
-            mlflow.log_metric("accuracy", acc)
-
-            # Log model
-            mlflow.sklearn.log_model(model, artifact_path="model", registered_model_name=None)
-            
-
-            # Advanced: Log artifacts
-
-            # 1. Confusion Matrix
+            # Confusion Matrix
             cm = confusion_matrix(y_test, y_pred)
             plt.figure()
             sns.heatmap(cm, annot=True, fmt="d")
             plt.title("Confusion Matrix")
 
             os.makedirs("artifacts", exist_ok=True)
-            cm_path = f"artifacts/cm_{n_estimators}_{max_depth}.png"
+            cm_path = f"artifacts/confusion_matrix_{n_estimators}_{max_depth}.png"
             plt.savefig(cm_path)
             plt.close()
             mlflow.log_artifact(cm_path)
 
-            # 2. Feature Importance
+            # Feature Importance
             fi = pd.DataFrame({
                 "feature": X_train.columns,
                 "importance": model.feature_importances_
@@ -83,4 +74,4 @@ for n_estimators in n_estimators_list:
             fi.to_csv(fi_path, index=False)
             mlflow.log_artifact(fi_path)
 
-            print(f"Run selesai | acc={acc}")
+            print(f"Run selesai | accuracy={acc}")
