@@ -21,12 +21,6 @@ jobs:
         activate-environment: mlflow-env
         use-mamba: true
 
-    - name: Create mlruns folder
-      run: mkdir -p $GITHUB_WORKSPACE/mlruns
-
-    - name: Set MLFLOW_TRACKING_URI
-      run: echo "MLFLOW_TRACKING_URI=$GITHUB_WORKSPACE/mlruns" >> $GITHUB_ENV
-
     - name: Set MLFLOW_EXPERIMENT_NAME
       run: echo "MLFLOW_EXPERIMENT_NAME=Titanic-Advanced-Tuning" >> $GITHUB_ENV
 

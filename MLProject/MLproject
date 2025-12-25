@@ -1,7 +1,0 @@
-name: workflow-ci-ml
-
-conda_env: conda.yaml
-
-entry_points:
-  main:
-    command: "python Modelling_tunning.py"
