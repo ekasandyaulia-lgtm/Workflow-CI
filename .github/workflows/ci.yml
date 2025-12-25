@@ -32,9 +32,9 @@ jobs:
 
     - name: Dagshub login
       run: conda run -n mlflow-env dagshub login --token ${{ secrets.DAGSHUB_TOKEN }}
-
-    - name: Run Modelling Tunning
-      run: conda run -n mlflow-env python MLProject/Modelling_tunning.py
+      
+    - name: Run Modelling Tunning with MLflow
+      run: conda run -n mlflow-env mlflow run MLProject
 
     - name: Upload MLflow artifacts
       uses: actions/upload-artifact@v4
