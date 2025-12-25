@@ -24,12 +24,12 @@ mlflow.set_experiment("Titanic-Advanced-Tuning")
 mlflow.autolog(log_models=True)
 
 # Load data
-project_root = os.getcwd()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-X_train = pd.read_csv(os.path.join(project_root, "processed_data", "X_train.csv"))
-X_test  = pd.read_csv(os.path.join(project_root, "processed_data", "X_test.csv"))
-y_train = pd.read_csv(os.path.join(project_root, "processed_data", "y_train.csv"))
-y_test  = pd.read_csv(os.path.join(project_root, "processed_data", "y_test.csv"))
+X_train = pd.read_csv(os.path.join(BASE_DIR, "processed_data", "X_train.csv"))
+X_test  = pd.read_csv(os.path.join(BASE_DIR, "processed_data", "X_test.csv"))
+y_train = pd.read_csv(os.path.join(BASE_DIR, "processed_data", "y_train.csv"))
+y_test  = pd.read_csv(os.path.join(BASE_DIR, "processed_data", "y_test.csv"))
 
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test = X_test.select_dtypes(include=["int64", "float64"])
