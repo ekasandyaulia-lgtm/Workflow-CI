@@ -18,8 +18,8 @@ jobs:
           auto-update-conda: true
           python-version: 3.10.19
           use-mamba: true
-
-      - name: Install MLflow & Dagshub
+      
+      - name: Install MLflow
         shell: bash -l {0}
         run: |
           pip install mlflow dagshub
@@ -31,26 +31,14 @@ jobs:
         run: |
           mlflow run MLProject
 
-      - name: Get Latest MLflow Run ID
-        shell: bash -l {0}
-        run: |
-          echo "MLFLOW_RUN_ID=$(ls mlruns/0 | sort | tail -n 1)" >> $GITHUB_ENV
-
-      - name: Docker Login
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
-            -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker Image from MLflow Model
         shell: bash -l {0}
         run: |
           mlflow models build-docker \
-            -m runs:/$MLFLOW_RUN_ID/model \
+            -m mlruns/0 \
+            -n titanic-advanced-model
             -n ekasandyaulia/titanic-mlflow:latest
-
-      - name: Push Docker Image
-        run: |
-          docker push ekasandyaulia/titanic-mlflow:latest
 
       - name: Upload MLflow Artifacts
         uses: actions/upload-artifact@v4
