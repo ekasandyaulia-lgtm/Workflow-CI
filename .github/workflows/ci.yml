@@ -55,10 +55,9 @@ jobs:
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker Model
-        shell: bash -l {0}
         run: |
           mlflow models build-docker \
-            -m runs:/$MLFLOW_RUN_ID/model \
+            -m mlruns/0/*/artifacts/model \
             -n ekasandy/titanic-mlflow:latest
 
       - name: Tag Docker Image
