@@ -1,4 +1,4 @@
-name: workflow-ci-ml
+name: titanic-advanced
 
 conda_env: conda.yaml
 

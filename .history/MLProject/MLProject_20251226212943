@@ -1,0 +1,7 @@
+name: titanic-advanced
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    command: "python Modelling_tunning.py"
