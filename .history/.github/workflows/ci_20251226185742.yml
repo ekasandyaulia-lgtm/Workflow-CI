@@ -1,0 +1,37 @@
+name: CI MLflow
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  train-model:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Setup Conda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: 3.10.19
+        environment-file: MLProject/conda.yaml
+        activate-environment: mlflow-env
+        use-mamba: true
+
+    - name: Set MLFLOW_EXPERIMENT_NAME
+      run: echo "MLFLOW_EXPERIMENT_NAME=Titanic-Advanced-Tuning" >> $GITHUB_ENV
+
+    - name: Dagshub login
+      run: conda run -n mlflow-env dagshub login --token ${{ secrets.DAGSHUB_TOKEN }}
+
+    - name: Run Modelling Tunning with MLflow
+      run: conda run -n mlflow-env mlflow run MLProject
+
+    - name: Upload MLflow artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: mlruns
+        path: MLProject/artifacts/
