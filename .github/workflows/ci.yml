@@ -5,54 +5,60 @@ on:
     branches: ["main"]
 
 jobs:
-  train:
+  train-model:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set up job
-      run: echo "Starting workflow for CI MLflow"
+      - name: Set up job
+        run: echo "Start CI workflow for MLflow"
 
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Run actions/checkout@v4
+        uses: actions/checkout@v4
 
-    - name: Setup Python 3.10.19
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: 3.10.19
+      - name: Set up Python 3.10.19
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: 3.10.19
+          use-mamba: true
 
-    - name: Check environment
-      run: |
-        python --version
-        conda list
+      - name: Check Env
+        run: |
+          python --version
+          conda list
 
-    - name: Install dependencies
-      run: pip install mlflow dagshub
+      - name: Install dependencies
+        run: |
+          pip install mlflow dagshub
 
-    - name: Run MLflow Project
-      env:
-        DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-      run: mlflow run MLProject
+      - name: Run MLflow Project
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          mlflow run MLProject
 
-    - name: Get latest MLflow run_id
-      run: |
-        echo "MLFLOW_RUN_ID=$(ls mlruns/0 | sort | tail -n 1)" >> $GITHUB_ENV
+      - name: Get latest MLflow run_id
+        run: |
+          echo "MLFLOW_RUN_ID=$(ls mlruns/0 | sort | tail -n 1)" >> $GITHUB_ENV
 
-    - name: Upload MLflow artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: mlruns
-        path: mlruns/
+      - name: Upload MLflow Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlruns
+          path: mlruns/
 
-    - name: Login Docker Hub
-      run: |
-        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Build Docker model
-      run: |
-        mlflow models build-docker -m runs:/$MLFLOW_RUN_ID/model -n ekasandyaulia/titanic-mlflow:latest
+      - name: Build Docker Model
+        run: |
+          mlflow models build-docker -m runs:/$MLFLOW_RUN_ID/model -n ekasandy/titanic-mlflow:latest
 
-    - name: Tag Docker Image
-      run: echo "Docker image tagged as ekasandyaulia/titanic-mlflow:latest"
+      - name: Tag Docker Image
+        run: echo "Tagged Docker image"
 
-    - name: Push Docker image
-      run: docker push ekasandyaulia/titanic-mlflow:latest
+      - name: Push Docker Image
+        run: docker push ekasandy/titanic-mlflow:latest
+
+      - name: Complete job
+        run: echo "CI job complete"
