@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 
-# Dashub MLflow tracking URI
+# Dagshub MLflow tracking URI
 mlflow.set_tracking_uri(
     "https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
 )
@@ -25,35 +25,35 @@ X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
-with mlflow.start_run(nested=True):
-    mlflow.sklearn.autolog(log_models=True)
+# ⛔ JANGAN start_run di MLflow Project
+mlflow.sklearn.autolog(log_models=True)
 
-    model = RandomForestClassifier(
-        n_estimators=100,
-        random_state=42
-    )
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
 
-    model.fit(X_train, y_train)
+model.fit(X_train, y_train)
 
-    y_pred = model.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
+y_pred = model.predict(X_test)
+acc = accuracy_score(y_test, y_pred)
 
-    mlflow.log_metric("manual_accuracy", acc)
+mlflow.log_metric("manual_accuracy", acc)
 
-    cm = confusion_matrix(y_test, y_pred)
-    disp = ConfusionMatrixDisplay(cm)
-    disp.plot()
-    plt.savefig("confusion_matrix.png")
-    plt.close()
-    mlflow.log_artifact("confusion_matrix.png")
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(cm)
+disp.plot()
+plt.savefig("confusion_matrix.png")
+plt.close()
+mlflow.log_artifact("confusion_matrix.png")
 
-    importances = model.feature_importances_
-    fi = pd.DataFrame({
-        "feature": X_train.columns,
-        "importance": importances
-    }).sort_values(by="importance", ascending=False)
+importances = model.feature_importances_
+fi = pd.DataFrame({
+    "feature": X_train.columns,
+    "importance": importances
+}).sort_values(by="importance", ascending=False)
 
-    fi.to_csv("feature_importance.csv", index=False)
-    mlflow.log_artifact("feature_importance.csv")
+fi.to_csv("feature_importance.csv", index=False)
+mlflow.log_artifact("feature_importance.csv")
 
-    print("Accuracy:", acc)
+print("Accuracy:", acc)
