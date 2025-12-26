@@ -60,6 +60,7 @@ jobs:
             -m mlruns/0/*/artifacts/model \
             -n ekasandy/titanic-mlflow:latest
 
+
       - name: Tag Docker Image
         run: echo "Tagged Docker image"
 
