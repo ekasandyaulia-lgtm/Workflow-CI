@@ -29,7 +29,7 @@ jobs:
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          mlflow run MLProject
+          mlflow run ./MLProject
 
       - name: Get Latest MLflow Run ID
         shell: bash -l {0}
