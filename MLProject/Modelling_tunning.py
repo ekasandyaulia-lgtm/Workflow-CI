@@ -25,44 +25,38 @@ y_test  = pd.read_csv("processed_data/y_test.csv").values.ravel()
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
-# Training + Logging
-with mlflow.start_run():
+# auto nih
+mlflow.sklearn.autolog(
+    log_models=True,
+    registered_model_name="Titanic-Advanced-Tuning"
+)
 
-    model = RandomForestClassifier(
-        n_estimators=100,
-        random_state=42
-    )
+# Training
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
 
-    model.fit(X_train, y_train)
+model.fit(X_train, y_train)
 
-    y_pred = model.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
+# Evaluation
+y_pred = model.predict(X_test)
+acc = accuracy_score(y_test, y_pred)
+print("Accuracy:", acc)
 
-    # Metric
-    mlflow.log_metric("accuracy", acc)
+# Manual Artifacts 
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(cm)
+disp.plot()
+plt.savefig("confusion_matrix.png")
+plt.close()
 
-    mlflow.sklearn.log_model(
-        sk_model=model,
-        artifact_path="model",
-        registered_model_name="Titanic-Advanced-Tuning"
-    )
+mlflow.log_artifact("confusion_matrix.png")
 
-    # Confusion Matrix Artifact
-    cm = confusion_matrix(y_test, y_pred)
-    disp = ConfusionMatrixDisplay(cm)
-    disp.plot()
-    plt.savefig("confusion_matrix.png")
-    plt.close()
+fi = pd.DataFrame({
+    "feature": X_train.columns,
+    "importance": model.feature_importances_
+}).sort_values(by="importance", ascending=False)
 
-    mlflow.log_artifact("confusion_matrix.png")
-
-    # Feature Importance Artifact
-    fi = pd.DataFrame({
-        "feature": X_train.columns,
-        "importance": model.feature_importances_
-    }).sort_values(by="importance", ascending=False)
-
-    fi.to_csv("feature_importance.csv", index=False)
-    mlflow.log_artifact("feature_importance.csv")
-
-    print("Accuracy:", acc)
+fi.to_csv("feature_importance.csv", index=False)
+mlflow.log_artifact("feature_importance.csv")
