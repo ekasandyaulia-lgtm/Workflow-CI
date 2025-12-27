@@ -25,8 +25,10 @@ X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
-# ⛔ JANGAN start_run di MLflow Project
-mlflow.sklearn.autolog(log_models=True)
+mlflow.sklearn.autolog(
+    log_models=True,
+    registered_model_name="Titanic-Advanced-Tuning"
+)
 
 model = RandomForestClassifier(
     n_estimators=100,
