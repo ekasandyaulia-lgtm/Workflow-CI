@@ -29,7 +29,7 @@ X_test  = X_test.select_dtypes(include=["int64", "float64"])
 # Autolog 
 mlflow.sklearn.autolog(log_models=True)
 
-with mlflow.start_run(run_name="Titanic-Advanced-Tuning"):
+with mlflow.start_run(run_name="Titanic-Advanced-Tuning", nested=True):
 
     model = RandomForestClassifier(
         n_estimators=100,
