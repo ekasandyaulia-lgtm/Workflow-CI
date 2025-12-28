@@ -22,7 +22,7 @@ jobs:
           python-version: "3.12"
           auto-activate-base: false
 
-      - name: Run MLflow Project & Capture Run ID
+      - name: Run MLflow Project
         shell: bash -l {0}
         env:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
@@ -45,7 +45,7 @@ jobs:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           mlflow models build-docker \
-            -m "runs:/${RUN_ID}/model" \
+            -m "runs:/${{ env.RUN_ID }}/model" \
             -n "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest" \
             --enable-mlserver
 
