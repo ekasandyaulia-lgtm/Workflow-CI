@@ -25,7 +25,7 @@ jobs:
       - name: Run MLflow Project
         shell: bash -l {0}
         env:
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+          DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         working-directory: ./MLProject
         run: |
           mlflow run . --experiment-name Titanic-Advanced-Tuning
