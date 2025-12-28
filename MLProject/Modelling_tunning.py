@@ -25,38 +25,43 @@ y_test  = pd.read_csv("processed_data/y_test.csv").values.ravel()
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
-# auto nih
-mlflow.sklearn.autolog(
-    log_models=True,
-    registered_model_name="Titanic-Advanced-Tuning"
-)
+# MLflow Run
+with mlflow.start_run():
 
-# Training
-model = RandomForestClassifier(
-    n_estimators=100,
-    random_state=42
-)
+    mlflow.sklearn.autolog(
+        log_models=True,
+        registered_model_name="Titanic-Advanced-Tuning"
+    )
 
-model.fit(X_train, y_train)
+    # Training
+    model = RandomForestClassifier(
+        n_estimators=100,
+        random_state=42
+    )
 
-# Evaluation
-y_pred = model.predict(X_test)
-acc = accuracy_score(y_test, y_pred)
-print("Accuracy:", acc)
+    model.fit(X_train, y_train)
 
-# Manual Artifacts 
-cm = confusion_matrix(y_test, y_pred)
-disp = ConfusionMatrixDisplay(cm)
-disp.plot()
-plt.savefig("confusion_matrix.png")
-plt.close()
+    # Evaluation
+    y_pred = model.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    mlflow.log_metric("accuracy", acc)
 
-mlflow.log_artifact("confusion_matrix.png")
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, y_pred)
+    disp = ConfusionMatrixDisplay(cm)
+    disp.plot()
+    plt.savefig("confusion_matrix.png")
+    plt.close()
 
-fi = pd.DataFrame({
-    "feature": X_train.columns,
-    "importance": model.feature_importances_
-}).sort_values(by="importance", ascending=False)
+    mlflow.log_artifact("confusion_matrix.png")
 
-fi.to_csv("feature_importance.csv", index=False)
-mlflow.log_artifact("feature_importance.csv")
+    # Feature Importance
+    fi = pd.DataFrame({
+        "feature": X_train.columns,
+        "importance": model.feature_importances_
+    }).sort_values(by="importance", ascending=False)
+
+    fi.to_csv("feature_importance.csv", index=False)
+    mlflow.log_artifact("feature_importance.csv")
+
+print("Training & logging completed successfully")
