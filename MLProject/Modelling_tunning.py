@@ -1,18 +1,10 @@
-import os
-import pandas as pd
-import mlflow
 import dagshub
+import mlflow
+import mlflow.sklearn
+import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
-
-mlflow.autolog(
-    log_models=True,
-    log_input_examples=True,
-    log_model_signatures=True
-)
-
-assert os.getenv("DAGSHUB_USER_TOKEN") is not None, "DAGSHUB_USER_TOKEN missing"
 
 dagshub.init(
     repo_owner="ekasandyaulia-lgtm",
@@ -20,55 +12,50 @@ dagshub.init(
     mlflow=True
 )
 
-mlflow.set_tracking_uri(
-    "https://dagshub.com/ekasandyaulia-lgtm/"
-    "SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
-)
-
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
+# load data
 X_train = pd.read_csv("processed_data/X_train.csv")
-X_test  = pd.read_csv("processed_data/X_test.csv")
+X_test = pd.read_csv("processed_data/X_test.csv")
 y_train = pd.read_csv("processed_data/y_train.csv").values.ravel()
-y_test  = pd.read_csv("processed_data/y_test.csv").values.ravel()
+y_test = pd.read_csv("processed_data/y_test.csv").values.ravel()
 
-X_train = X_train.select_dtypes(include=["int64", "float64"])
-X_test  = X_test.select_dtypes(include=["int64", "float64"])
+with mlflow.start_run(run_name="LogReg-Advanced"):
 
-with mlflow.start_run():
+    params = {
+        "C": 1.0,
+        "max_iter": 200,
+        "solver": "liblinear"
+    }
 
-    n_estimators = 100
-    random_state = 42
-
-    model = RandomForestClassifier(
-        n_estimators=n_estimators,
-        random_state=random_state
-    )
-
+    model = LogisticRegression(**params)
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
-    
-    mlflow.log_metric("test_accuracy", acc)
 
-    # Confusion Matrix
+    # log parameter dan metrik
+    mlflow.log_params(params)
+    mlflow.log_metric("accuracy", acc)
+
+    # artefak tambahan 1: confusion matrix
     cm = confusion_matrix(y_test, y_pred)
     disp = ConfusionMatrixDisplay(cm)
     disp.plot()
-    plt.title(f"Confusion Matrix (Accuracy: {acc:.4f})")
     plt.savefig("confusion_matrix.png")
     plt.close()
-
     mlflow.log_artifact("confusion_matrix.png")
 
-    # Feature Importance
-    fi = pd.DataFrame({
-        "feature": X_train.columns,
-        "importance": model.feature_importances_
-    }).sort_values(by="importance", ascending=False)
+    # artefak tambahan 2: koefisien model
+    coef_df = pd.DataFrame(model.coef_, columns=X_train.columns)
+    coef_df.to_csv("model_coefficients.csv", index=False)
+    mlflow.log_artifact("model_coefficients.csv")
 
-    fi.to_csv("feature_importance.csv", index=False)
-    mlflow.log_artifact("feature_importance.csv")
+    # log model
+    mlflow.sklearn.log_model(
+        model,
+        artifact_path="model",
+        registered_model_name="TitanicModel"
+    )
 
-print("MLflow Advanced Training Completed")
+print("training selesai dan artefak tersimpan")
