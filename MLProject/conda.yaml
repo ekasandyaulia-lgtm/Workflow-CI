@@ -1,4 +1,4 @@
-name: mlflow-env
+name: titanic-mlflow
 channels:
   - conda-forge
 dependencies:
@@ -7,6 +7,6 @@ dependencies:
   - pip:
       - mlflow==2.18.0
       - dagshub
-      - pandas
       - scikit-learn
+      - pandas
       - matplotlib
