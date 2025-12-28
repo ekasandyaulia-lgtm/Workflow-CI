@@ -4,9 +4,9 @@ channels:
 dependencies:
   - python=3.12
   - pip
-- pip:
-    - mlflow
-    - dagshub
-    - scikit-learn
-    - pandas
-    - matplotlib
+  - pip:
+      - mlflow==2.18.0
+      - dagshub
+      - scikit-learn==1.5.2
+      - pandas
+      - matplotlib
