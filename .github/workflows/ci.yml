@@ -30,6 +30,9 @@ jobs:
         run: |
           mlflow run MLProject
 
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
       - name: Login Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
