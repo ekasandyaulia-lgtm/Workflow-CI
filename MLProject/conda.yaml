@@ -2,14 +2,11 @@ name: mlflow-env
 channels:
   - conda-forge
 dependencies:
-  - python=3.10.19
-  - scikit-learn=1.5.2
-  - pandas
-  - numpy
-  - matplotlib
-  - seaborn
-  - jupyter
+  - python=3.12
   - pip
   - pip:
-      - mlflow
+      - mlflow==2.18.0
       - dagshub
+      - pandas
+      - scikit-learn
+      - matplotlib
