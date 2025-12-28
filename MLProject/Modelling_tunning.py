@@ -47,7 +47,7 @@ with mlflow.start_run():
         model,
         artifact_path="model",
         registered_model_name="Titanic-Advanced-Tuning"
-    
+    )
 
     # Artifacts
     cm = confusion_matrix(y_test, y_pred)
