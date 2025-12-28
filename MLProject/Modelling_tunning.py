@@ -15,7 +15,7 @@ mlflow.autolog(
     log_datasets=True
 )
 
-assert os.getenv("DAGSHUB_TOKEN") is not None, "DAGSHUB_TOKEN is missing"
+assert os.getenv("DAGSHUB_USER_TOKEN") is not None, "DAGSHUB_USER_TOKEN is missing"
 
 dagshub.init(
     repo_owner="ekasandyaulia-lgtm",
