@@ -26,10 +26,10 @@ y_test  = pd.read_csv("processed_data/y_test.csv").values.ravel()
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
-# Autolog 
+# Autolog
 mlflow.sklearn.autolog(log_models=True)
 
-with mlflow.start_run(run_name="Titanic-Advanced-Tuning", nested=True):
+with mlflow.start_run(run_name="Titanic-Advanced-Tuning"):
 
     model = RandomForestClassifier(
         n_estimators=100,
@@ -49,10 +49,9 @@ with mlflow.start_run(run_name="Titanic-Advanced-Tuning", nested=True):
     disp.plot()
     plt.savefig("confusion_matrix.png")
     plt.close()
-
     mlflow.log_artifact("confusion_matrix.png")
 
-    # Feature importance
+    # Artifact: feature importance
     fi = pd.DataFrame({
         "feature": X_train.columns,
         "importance": model.feature_importances_
@@ -60,5 +59,3 @@ with mlflow.start_run(run_name="Titanic-Advanced-Tuning", nested=True):
 
     fi.to_csv("feature_importance.csv", index=False)
     mlflow.log_artifact("feature_importance.csv")
-
-print("MLflow Project training completed successfully")
