@@ -9,50 +9,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Start job
-        run: echo "Start CI workflow for MLflow (Advanced)"
-
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.10.19
+      - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: 3.10.19
-          use-mamba: true
+          auto-activate-base: true
 
-      - name: Check Env
-        shell: bash -l {0}
-        run: |
-          python --version
-          conda list
-
-      - name: Install dependencies
+      - name: Install MLflow
         shell: bash -l {0}
         run: |
           pip install mlflow dagshub
 
-      - name: Run MLflow Project
+      - name: Run MLflow Project (Retraining)
         shell: bash -l {0}
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          python Modelling_tunning.py
+          mlflow run MLProject
 
-      - name: Log in to Docker Hub
+      - name: Login Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
             -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build Docker Model
+      - name: Build Docker Image (MLflow Project)
         shell: bash -l {0}
         run: |
-          mlflow models build-docker \
-            -m models:/Titanic-Advanced-Tuning/latest \
+          mlflow build-docker MLProject \
             -n ekasandy/titanic-mlflow:latest
 
       - name: Push Docker Image
         run: docker push ekasandy/titanic-mlflow:latest
-
-      - name: Complete job
-        run: echo "CI MLflow Advanced job complete"
