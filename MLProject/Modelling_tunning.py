@@ -11,7 +11,8 @@ from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDis
 dagshub.init(
     repo_owner="ekasandyaulia-lgtm",
     repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
-    mlflow=True
+    mlflow=True,
+    token=os.getenv("DAGSHUB_TOKEN")
 )
 
 # Tracking URI
