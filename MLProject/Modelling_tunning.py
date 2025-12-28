@@ -8,9 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 
-# Dagshub & MLflow Config
-os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("DAGSHUB_TOKEN")
-os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("DAGSHUB_TOKEN")
+assert os.getenv("DAGSHUB_TOKEN") is not None, "DAGSHUB_TOKEN is missing"
 
 dagshub.init(
     repo_owner="ekasandyaulia-lgtm",
@@ -24,8 +22,6 @@ mlflow.set_tracking_uri(
 
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
-# Load Data
-
 X_train = pd.read_csv("processed_data/X_train.csv")
 X_test  = pd.read_csv("processed_data/X_test.csv")
 y_train = pd.read_csv("processed_data/y_train.csv").values.ravel()
@@ -34,11 +30,8 @@ y_test  = pd.read_csv("processed_data/y_test.csv").values.ravel()
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
-# Training & Logging
-
 with mlflow.start_run():
 
-    # Parameters
     n_estimators = 100
     random_state = 42
 
@@ -52,12 +45,11 @@ with mlflow.start_run():
 
     model.fit(X_train, y_train)
 
-    # Metrics
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     mlflow.log_metric("accuracy", acc)
 
-    # Model Artifact
+    # Log model
     mlflow.sklearn.log_model(
         model,
         artifact_path="model",
@@ -81,4 +73,4 @@ with mlflow.start_run():
     fi.to_csv("feature_importance.csv", index=False)
     mlflow.log_artifact("feature_importance.csv")
 
-print("MLflow Advanced Training Completed Successfully")
+print("MLflow Advanced Training Completed")
