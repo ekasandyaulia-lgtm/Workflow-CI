@@ -1,4 +1,4 @@
-name: workflow-ci-ml
+name: Titanic-MLflow-Project
 
 conda_env: conda.yaml
 
