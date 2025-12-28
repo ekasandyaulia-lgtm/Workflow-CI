@@ -3,52 +3,42 @@ name: CI MLflow Advanced
 on:
   push:
     branches: ["main"]
-  pull_request:
-    branches: ["main"]
 
 jobs:
   train-model:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Miniconda
+      - name: set up miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: titanic-mlflow
           environment-file: MLProject/conda.yaml
-          python-version: "3.12"
+          activate-environment: titanic-mlflow
           auto-activate-base: false
 
-      - name: Run MLflow Project & Capture Run ID
+      - name: retrain model via mlflow project
         shell: bash -l {0}
         env:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-        working-directory: ./MLProject
         run: |
-          mlflow run . --experiment-name Titanic-Advanced-Tuning | tee mlflow_output.txt
-          RUN_ID=$(grep -oP 'Run \(ID \K[a-f0-9]+' mlflow_output.txt)
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-          echo "Captured RUN_ID=$RUN_ID"
+          cd MLProject
+          mlflow run . --experiment-name Titanic-Advanced-Tuning
 
-      - name: Login to Docker Hub
+      - name: login docker hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
             -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build Docker Image from MLflow Model
-        shell: bash -l {0}
+      - name: build docker image from model registry
         env:
           MLFLOW_TRACKING_URI: https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           mlflow models build-docker \
-            -m "runs:/${RUN_ID}/model" \
+            -m "models:/TitanicModel/Production" \
             -n "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest" \
             --enable-mlserver
 
-      - name: Push Docker Image to Docker Hub
-        run: |
-          docker push "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest"
+      - name: push docker image
+        run: docker push "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest"
