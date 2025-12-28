@@ -49,11 +49,10 @@ with mlflow.start_run():
     acc = accuracy_score(y_test, y_pred)
     mlflow.log_metric("accuracy", acc)
 
-    # Log model
+    # Log model (TANPA registry)
     mlflow.sklearn.log_model(
         model,
-        artifact_path="model",
-        registered_model_name="Titanic-Advanced-Tuning"
+        artifact_path="model"
     )
 
     # Artifact 1: Confusion Matrix
@@ -73,4 +72,4 @@ with mlflow.start_run():
     fi.to_csv("feature_importance.csv", index=False)
     mlflow.log_artifact("feature_importance.csv")
 
-print("MLflow Advanced Training Completed")
+print("MLflow Advanced Training Completed"
