@@ -25,44 +25,43 @@ y_test  = pd.read_csv("processed_data/y_test.csv").values.ravel()
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
-with mlflow.start_run():
+# Autolog 
+mlflow.sklearn.autolog(log_models=True)
 
-    mlflow.sklearn.autolog(log_models=True)
+# Training
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
 
-    # Training
-    model = RandomForestClassifier(
-        n_estimators=100,
-        random_state=42
-    )
+model.fit(X_train, y_train)
 
-    model.fit(X_train, y_train)
+# Evaluation
+y_pred = model.predict(X_test)
+acc = accuracy_score(y_test, y_pred)
+mlflow.log_metric("accuracy", acc)
 
-    # Evaluation
-    y_pred = model.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
-    mlflow.log_metric("accuracy", acc)
+# Register Model
+mlflow.sklearn.log_model(
+    model,
+    artifact_path="model",
+    registered_model_name="Titanic-Advanced-Tuning"
+)
 
-    # Regis model
-    mlflow.sklearn.log_model(
-        model,
-        artifact_path="model",
-        registered_model_name="Titanic-Advanced-Tuning"
-    )
+# Artifacts 
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(cm)
+disp.plot()
+plt.savefig("confusion_matrix.png")
+plt.close()
+mlflow.log_artifact("confusion_matrix.png")
 
-    # Artifacts
-    cm = confusion_matrix(y_test, y_pred)
-    disp = ConfusionMatrixDisplay(cm)
-    disp.plot()
-    plt.savefig("confusion_matrix.png")
-    plt.close()
-    mlflow.log_artifact("confusion_matrix.png")
+fi = pd.DataFrame({
+    "feature": X_train.columns,
+    "importance": model.feature_importances_
+}).sort_values(by="importance", ascending=False)
 
-    fi = pd.DataFrame({
-        "feature": X_train.columns,
-        "importance": model.feature_importances_
-    }).sort_values(by="importance", ascending=False)
-
-    fi.to_csv("feature_importance.csv", index=False)
-    mlflow.log_artifact("feature_importance.csv")
+fi.to_csv("feature_importance.csv", index=False)
+mlflow.log_artifact("feature_importance.csv")
 
 print("Training & logging completed successfully")
