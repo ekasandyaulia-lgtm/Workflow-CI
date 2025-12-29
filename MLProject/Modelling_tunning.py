@@ -18,7 +18,7 @@ dagshub.init(
 )
 
 mlflow.set_tracking_uri(
-    "https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
+    f"https://{os.getenv('DAGSHUB_TOKEN')}@dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
 )
 
 mlflow.set_experiment("Titanic-Advanced-Tuning")
