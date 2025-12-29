@@ -22,19 +22,19 @@ jobs:
           python-version: "3.12"
           auto-activate-base: false
 
-      - name: Run MLflow Project
+      - name: Run Modelling Tunning
         shell: bash -l {0}
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         working-directory: ./MLProject
         run: |
-          mlflow run . --experiment-name Titanic-Advanced-Tuning
+          # Jalankan script langsung tanpa mlflow run (menghindari nested run)
+          python Modelling_tunning.py
 
       - name: Get latest MLflow RUN_ID
         shell: bash -l {0}
         env:
           MLFLOW_TRACKING_URI: https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           RUN_ID=$(python -c "import mlflow; print(mlflow.active_run().info.run_id if mlflow.active_run() else 'NoActiveRun')")
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
@@ -49,7 +49,6 @@ jobs:
         shell: bash -l {0}
         env:
           MLFLOW_TRACKING_URI: https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           mlflow models build-docker \
             -m "runs:/${{ env.RUN_ID }}/model" \
