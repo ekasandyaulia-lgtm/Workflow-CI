@@ -22,10 +22,8 @@ jobs:
           python-version: "3.12"
           auto-activate-base: false
 
-      - name: Install Docker (needed for mlflow build-docker)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+      - name: Set up Docker
+        uses: docker/setup-docker@v2
 
       - name: Run Modelling Tunning
         shell: bash -l {0}
