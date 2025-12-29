@@ -19,7 +19,7 @@ jobs:
         with:
           activate-environment: titanic-mlflow
           environment-file: MLProject/conda.yaml
-          python-version: "3.9"
+          python-version: "3.12"
           auto-activate-base: false
 
       - name: Install Docker (needed for mlflow build-docker)
@@ -36,10 +36,9 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         working-directory: ./MLProject
         run: |
-          # Jalankan script langsung
           python Modelling_tunning.py --mlflow-tracking-uri "$MLFLOW_TRACKING_URI" --use-dagshub
 
-      - name: Upload run_id as artifact (so reviewers can inspect)
+      - name: Upload run_id as artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
@@ -60,7 +59,6 @@ jobs:
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
-          # Read run_id
           RUN_ID=$(cat MLProject/run_info.txt)
           echo "Run ID: $RUN_ID"
           mlflow models build-docker \
