@@ -3,42 +3,59 @@ name: CI MLflow Advanced
 on:
   push:
     branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
   train-model:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: set up miniconda
+      - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          environment-file: MLProject/conda.yaml
           activate-environment: titanic-mlflow
+          environment-file: MLProject/conda.yaml
+          python-version: "3.12"
           auto-activate-base: false
 
-      - name: retrain model via mlflow project
+      - name: Run MLflow Project
         shell: bash -l {0}
         env:
-          DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        working-directory: ./MLProject
         run: |
-          cd MLProject
           mlflow run . --experiment-name Titanic-Advanced-Tuning
 
-      - name: login docker hub
+      - name: Get latest MLflow RUN_ID
+        shell: bash -l {0}
+        env:
+          MLFLOW_TRACKING_URI: https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          RUN_ID=$(python -c "import mlflow; print(mlflow.active_run().info.run_id)")
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "Latest Run ID: $RUN_ID"
+
+      - name: Login to Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
             -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: build docker image from model registry
+      - name: Build Docker Image from MLflow Model
+        shell: bash -l {0}
         env:
           MLFLOW_TRACKING_URI: https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           mlflow models build-docker \
-            -m "models:/TitanicModel/Production" \
+            -m "runs:/${{ env.RUN_ID }}/model" \
             -n "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest" \
             --enable-mlserver
 
-      - name: push docker image
-        run: docker push "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest"
+      - name: Push Docker Image to Docker Hub
+        run: |
+          docker push "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest"
