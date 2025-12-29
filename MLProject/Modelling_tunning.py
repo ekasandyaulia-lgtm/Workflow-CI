@@ -10,12 +10,6 @@ import dagshub
 assert os.getenv("DAGSHUB_TOKEN") is not None, "DAGSHUB_TOKEN is missing"
 
 # Inisialisasi DagsHub dan MLflow tracking
-dagshub.init(
-    repo_owner="ekasandyaulia-lgtm",
-    repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
-    mlflow=True,
-    token=os.getenv("DAGSHUB_TOKEN")
-)
 
 mlflow.set_tracking_uri(
     f"https://{os.getenv('DAGSHUB_TOKEN')}@dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
