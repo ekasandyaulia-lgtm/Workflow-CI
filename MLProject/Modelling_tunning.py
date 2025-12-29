@@ -8,7 +8,7 @@ import mlflow.sklearn
 
 DAGSHUB_TOKEN = os.environ["DAGSHUB_TOKEN"]
 
-# Set tracking URI dan experiment
+# Set tracking URI ke DagsHub
 mlflow.set_tracking_uri(
     f"https://{DAGSHUB_TOKEN}@dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
 )
@@ -20,10 +20,10 @@ X_test  = pd.read_csv("processed_data/X_test.csv")
 y_train = pd.read_csv("processed_data/y_train.csv").values.ravel()
 y_test  = pd.read_csv("processed_data/y_test.csv").values.ravel()
 
-# Pilih kolom numerik
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
+# Manual logging run
 with mlflow.start_run() as run:
     RUN_ID = run.info.run_id
     print(f"MLflow Run ID: {RUN_ID}")
@@ -33,15 +33,15 @@ with mlflow.start_run() as run:
     model = LogisticRegression(**params)
     model.fit(X_train, y_train)
 
-    # Evaluasi
+    # Prediksi & evaluasi
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
 
-    # Log parameter dan metric
+    # Log parameter & metric
     mlflow.log_params(params)
     mlflow.log_metric("accuracy", acc)
 
-    # Log artefak: Confusion Matrix
+    # Log artefak tambahan 1: Confusion Matrix
     cm = confusion_matrix(y_test, y_pred)
     disp = ConfusionMatrixDisplay(cm)
     disp.plot()
@@ -50,7 +50,7 @@ with mlflow.start_run() as run:
     plt.close()
     mlflow.log_artifact("confusion_matrix.png")
 
-    # Log artefak: Koefisien model
+    # Log artefak tambahan 2: Koefisien model
     coef_df = pd.DataFrame(model.coef_, columns=X_train.columns)
     coef_df.to_csv("model_coefficients.csv", index=False)
     mlflow.log_artifact("model_coefficients.csv")
