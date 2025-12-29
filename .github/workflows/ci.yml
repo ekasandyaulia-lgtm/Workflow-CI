@@ -1,4 +1,4 @@
-name: CI MLflow Advanced
+name: CI MLflow
 
 on:
   push:
@@ -19,42 +19,56 @@ jobs:
         with:
           activate-environment: titanic-mlflow
           environment-file: MLProject/conda.yaml
-          python-version: "3.12"
+          python-version: "3.9"
           auto-activate-base: false
+
+      - name: Install Docker (needed for mlflow build-docker)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
 
       - name: Run Modelling Tunning
         shell: bash -l {0}
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+          DAGSHUB_REPO_OWNER: ${{ secrets.DAGSHUB_REPO_OWNER }}
+          DAGSHUB_REPO_NAME: ${{ secrets.DAGSHUB_REPO_NAME }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         working-directory: ./MLProject
         run: |
-          # Jalankan script langsung tanpa mlflow run (menghindari nested run)
-          python Modelling_tunning.py
+          # Jalankan script langsung
+          python Modelling_tunning.py --mlflow-tracking-uri "$MLFLOW_TRACKING_URI" --use-dagshub
 
-      - name: Get latest MLflow RUN_ID
-        shell: bash -l {0}
-        env:
-          MLFLOW_TRACKING_URI: https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow
-        run: |
-          RUN_ID=$(python -c "import mlflow; print(mlflow.active_run().info.run_id if mlflow.active_run() else 'NoActiveRun')")
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-          echo "Latest Run ID: $RUN_ID"
+      - name: Upload run_id as artifact (so reviewers can inspect)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-info
+          path: MLProject/run_info.txt
 
       - name: Login to Docker Hub
+        if: success()
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
-            -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - name: Build Docker Image from MLflow Model
+        if: success()
         shell: bash -l {0}
         env:
-          MLFLOW_TRACKING_URI: https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
+          # Read run_id
+          RUN_ID=$(cat MLProject/run_info.txt)
+          echo "Run ID: $RUN_ID"
           mlflow models build-docker \
-            -m "runs:/${{ env.RUN_ID }}/model" \
+            -m "runs:/$RUN_ID/model" \
             -n "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest" \
             --enable-mlserver
 
       - name: Push Docker Image to Docker Hub
+        if: success()
         run: |
           docker push "${{ secrets.DOCKER_USERNAME }}/titanic-mlflow:latest"
