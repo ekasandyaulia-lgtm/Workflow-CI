@@ -7,7 +7,7 @@ import mlflow
 import mlflow.sklearn
 import dagshub
 
-assert os.getenv("DAGSHUB_TOKEN") is not None, "DAGSHUB_TOKEN is missing"
+DAGSHUB_TOKEN = os.environ["DAGSHUB_TOKEN"]
 
 # Inisialisasi DagsHub dan MLflow tracking
 
