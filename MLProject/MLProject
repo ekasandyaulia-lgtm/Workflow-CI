@@ -1,8 +1,5 @@
-titanic-mlflow-project
+name: titanic-mlflow
 conda_env: conda.yaml
 entry_points:
   main:
-    parameters:name:
-      mlflow_tracking_uri: {type: str, default: "http://127.0.0.1:5000"}
-      use_dagshub: {type: bool, default: false}
-    command: "python Modelling_tunning.py --mlflow-tracking-uri {mlflow_tracking_uri} --use-dagshub {use_dagshub}"
+    command: "python Modelling_tunning.py"
