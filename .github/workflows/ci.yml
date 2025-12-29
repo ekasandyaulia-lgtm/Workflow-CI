@@ -36,7 +36,7 @@ jobs:
           MLFLOW_TRACKING_URI: https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          RUN_ID=$(python -c "import mlflow; print(mlflow.active_run().info.run_id)")
+          RUN_ID=$(python -c "import mlflow; print(mlflow.active_run().info.run_id if mlflow.active_run() else 'NoActiveRun')")
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "Latest Run ID: $RUN_ID"
 
