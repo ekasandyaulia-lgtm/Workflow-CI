@@ -15,7 +15,10 @@ jobs:
       - name: Install MLflow & Dagshub
         run: |
           pip install mlflow==2.18.0 dagshub
-
+      - name: Fix conda activation for MLflow
+        run: |
+          echo "MLFLOW_CONDA_HOME=/usr/share/miniconda" >> $GITHUB_ENV
+          
       - name: Run MLflow Project
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
