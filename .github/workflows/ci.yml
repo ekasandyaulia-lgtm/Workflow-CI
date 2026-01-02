@@ -31,7 +31,8 @@ jobs:
           DAGSHUB_REPO_NAME: ${{ secrets.DAGSHUB_REPO_NAME }}
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
-          mlflow run MLproject
+          mlflow run ./MLProject
+
 
       - name: Upload run_id as artifact
         if: success()
