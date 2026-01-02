@@ -10,6 +10,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 
 # dagshub integration
+mlflow.set_tracking_uri(
+    "https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
+)
+
 dagshub.init(
     repo_owner="ekasandyaulia-lgtm",
     repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
