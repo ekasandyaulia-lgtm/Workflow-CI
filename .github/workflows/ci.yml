@@ -13,7 +13,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install mlflow==2.18.0 scikit-learn pandas matplotlib seaborn
+          pip install mlflow==2.18.0 dagshub scikit-learn pandas matplotlib seaborn
 
       - name: Run MLflow Project
         run: |
