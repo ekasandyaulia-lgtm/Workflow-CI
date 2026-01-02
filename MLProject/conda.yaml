@@ -2,11 +2,13 @@ name: titanic-mlflow
 channels:
   - conda-forge
 dependencies:
-  - python=3.12
+  - python=3.10.19
+  - scikit-learn=1.5.2
+  - pandas
+  - numpy
+  - matplotlib
+  - seaborn
   - pip
   - pip:
       - mlflow==2.18.0
       - dagshub
-      - scikit-learn==1.5.2
-      - pandas
-      - matplotlib
