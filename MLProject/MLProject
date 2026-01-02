@@ -1,7 +1,6 @@
-name: titanic-mlflow
-
-env_manager: local
-
+name: Titanic-Advanced-Tuning
+conda_env: conda.yaml
 entry_points:
   main:
+    parameters: {}
     command: "python modelling.py"
