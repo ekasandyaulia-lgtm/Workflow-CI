@@ -26,10 +26,7 @@ jobs:
         run: |
           pip install mlflow==2.18.0 dagshub
 
-      # =========================
-      # RUN MLFLOW PROJECT (PM STYLE)
-      # =========================
-      - name: Run MLflow Project
+      - name: Run Modelling Tuning
         shell: bash -l {0}
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
@@ -37,7 +34,7 @@ jobs:
           DAGSHUB_REPO_NAME: ${{ secrets.DAGSHUB_REPO_NAME }}
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
-          mlflow run ./MLProject -P use_dagshub=true --env-manager=local
+          python MLProject/Modelling_tunning.py --use-dagshub
 
       - name: Upload run_id
         uses: actions/upload-artifact@v4
