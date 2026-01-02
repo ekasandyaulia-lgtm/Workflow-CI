@@ -37,12 +37,13 @@ X_test  = X_test.select_dtypes(include=["int64", "float64"])
 n_estimators_list = [50, 100]
 max_depth_list = [5, 10]
 
+from mlflow.models.signature import infer_signature
+
 for n_estimators in n_estimators_list:
     for max_depth in max_depth_list:
 
         with mlflow.start_run():
 
-            # manual logging params
             mlflow.log_param("n_estimators", n_estimators)
             mlflow.log_param("max_depth", max_depth)
 
@@ -57,10 +58,9 @@ for n_estimators in n_estimators_list:
             y_pred = model.predict(X_test)
             acc = accuracy_score(y_test, y_pred)
 
-            # manual logging metric
             mlflow.log_metric("accuracy", acc)
 
-            # artifact 1: Confusion Matrix
+            # Confusion Matrix
             cm = confusion_matrix(y_test, y_pred)
             plt.figure(figsize=(5,4))
             sns.heatmap(cm, annot=True, fmt="d")
@@ -72,7 +72,7 @@ for n_estimators in n_estimators_list:
             plt.close()
             mlflow.log_artifact(cm_path)
 
-            # artifact 2: Feature Importance
+            # Feature Importance
             fi = pd.DataFrame({
                 "feature": X_train.columns,
                 "importance": model.feature_importances_
@@ -82,7 +82,13 @@ for n_estimators in n_estimators_list:
             fi.to_csv(fi_path, index=False)
             mlflow.log_artifact(fi_path)
 
-            #log model
-            mlflow.sklearn.log_model(model, "model")
+            signature = infer_signature(X_train, model.predict(X_train))
+
+            mlflow.sklearn.log_model(
+                model,
+                artifact_path="model",
+                input_example=X_train.iloc[:5],
+                signature=signature
+            )
 
             print(f"Run selesai | acc={acc}")
