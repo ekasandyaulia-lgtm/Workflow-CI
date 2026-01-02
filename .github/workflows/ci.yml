@@ -16,6 +16,9 @@ jobs:
           pip install mlflow==2.18.0 dagshub scikit-learn pandas matplotlib seaborn
 
       - name: Run MLflow Project
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
           mlflow run MLProject --env-manager local
 
