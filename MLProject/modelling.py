@@ -1,42 +1,36 @@
 import os
-
-os.environ.pop("MLFLOW_RUN_ID", None)
-
 import pandas as pd
 import mlflow
 import mlflow.sklearn
-import dagshub
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
+from mlflow.models.signature import infer_signature
 
-# dagshub integration
-token = os.getenv("DAGSHUB_TOKEN")
-if token:
-    os.environ["MLFLOW_TRACKING_USERNAME"] = "ekasandyaulia-lgtm"
-    os.environ["MLFLOW_TRACKING_PASSWORD"] = token
-
+# MLflow Configuration
 mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
-# load data hasil preprocessing
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+mlflow.autolog(log_models=True)
 
-X_train = pd.read_csv(os.path.join(BASE_DIR, "processed_data", "X_train.csv"))
-X_test  = pd.read_csv(os.path.join(BASE_DIR, "processed_data", "X_test.csv"))
-y_train = pd.read_csv(os.path.join(BASE_DIR, "processed_data", "y_train.csv")).values.ravel()
-y_test  = pd.read_csv(os.path.join(BASE_DIR, "processed_data", "y_test.csv")).values.ravel()
+# Load Preprocessed Data
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "processed_data")
+
+X_train = pd.read_csv(os.path.join(DATA_DIR, "X_train.csv"))
+X_test  = pd.read_csv(os.path.join(DATA_DIR, "X_test.csv"))
+y_train = pd.read_csv(os.path.join(DATA_DIR, "y_train.csv")).values.ravel()
+y_test  = pd.read_csv(os.path.join(DATA_DIR, "y_test.csv")).values.ravel()
 
 X_train = X_train.select_dtypes(include=["int64", "float64"])
 X_test  = X_test.select_dtypes(include=["int64", "float64"])
 
-# hyperparameter tuning
+# Hyperparameter Tuning
 n_estimators_list = [50, 100]
 max_depth_list = [5, 10]
 
-from mlflow.models.signature import infer_signature
+os.makedirs("artifacts", exist_ok=True)
 
 for n_estimators in n_estimators_list:
     for max_depth in max_depth_list:
@@ -56,16 +50,14 @@ for n_estimators in n_estimators_list:
 
             y_pred = model.predict(X_test)
             acc = accuracy_score(y_test, y_pred)
-
             mlflow.log_metric("accuracy", acc)
 
             # Confusion Matrix
             cm = confusion_matrix(y_test, y_pred)
-            plt.figure(figsize=(5,4))
+            plt.figure(figsize=(5, 4))
             sns.heatmap(cm, annot=True, fmt="d")
             plt.title("Confusion Matrix")
 
-            os.makedirs("artifacts", exist_ok=True)
             cm_path = f"artifacts/cm_{n_estimators}_{max_depth}.png"
             plt.savefig(cm_path)
             plt.close()
@@ -86,8 +78,8 @@ for n_estimators in n_estimators_list:
             mlflow.sklearn.log_model(
                 model,
                 artifact_path="model",
-                input_example=X_train.iloc[:5],
-                signature=signature
+                signature=signature,
+                input_example=X_train.iloc[:5]
             )
 
-            print(f"Run selesai | acc={acc}")
+            print(f"Run selesai | n_estimators={n_estimators}, max_depth={max_depth}, acc={acc}")

@@ -17,14 +17,23 @@ jobs:
 
       - name: Run MLflow Project
         env:
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           mlflow run MLProject --env-manager local
 
       - name: Get Latest Run ID
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          RUN_ID=$(ls -td mlruns/*/* | head -n 1 | awk -F'/' '{print $(NF-1)}')
+          RUN_ID=$(mlflow runs list \
+            --experiment-name Titanic-Advanced-Tuning \
+            --order-by attribute.start_time DESC \
+            --max-results 1 \
+            | awk 'NR==2 {print $1}')
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
 
       - name: Docker Login
@@ -32,7 +41,7 @@ jobs:
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
             -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build Docker Image
+      - name: Build Docker Image with MLflow
         run: |
           mlflow models build-docker \
             -m runs:/$RUN_ID/model \
@@ -42,7 +51,7 @@ jobs:
       - name: Push Docker Image
         run: docker push ekasandyaulia/titanic-mlflow:latest
 
-      - name: Upload Artifacts
+      - name: Upload Training Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: training-artifacts
