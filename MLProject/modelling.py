@@ -37,7 +37,7 @@ max_depth_list = [5, 10]
 for n_estimators in n_estimators_list:
     for max_depth in max_depth_list:
 
-        with mlflow.start_run(nested=True):
+        with mlflow.start_run():
 
             # manual logging params
             mlflow.log_param("n_estimators", n_estimators)
