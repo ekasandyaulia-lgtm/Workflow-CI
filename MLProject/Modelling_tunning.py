@@ -24,13 +24,7 @@ def plot_confusion(y_true, y_pred, filename="confusion_matrix.png"):
 
 
 def main(args):
-    # MLflow setup
-    mlflow.set_tracking_uri(
-        args.mlflow_tracking_uri
-        or os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
-    )
-    mlflow.set_experiment("Titanic-Advanced-Tuning")
-
+    # initialize dagshub 
     if args.use_dagshub and dagshub:
         dagshub.init(
             repo_owner=os.environ.get("DAGSHUB_REPO_OWNER"),
@@ -38,13 +32,19 @@ def main(args):
             mlflow=True
         )
 
-    # autolog
-    mlflow.sklearn.autolog(
-        log_models=True,
-        disable=False
+    # set mlflow tracking uri
+    mlflow.set_tracking_uri(
+        args.mlflow_tracking_uri
+        or os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
     )
 
-    # Load processed data
+    # set experiment
+    mlflow.set_experiment("Titanic-Advanced-Tuning")
+
+    # autolog
+    mlflow.sklearn.autolog(log_models=True)
+
+    # load data
     X_train = pd.read_csv("processed_data/X_train.csv")
     X_test = pd.read_csv("processed_data/X_test.csv")
     y_train = pd.read_csv("processed_data/y_train.csv").values.ravel()
@@ -54,7 +54,7 @@ def main(args):
     X_train = X_train[num_cols]
     X_test = X_test[num_cols]
 
-    # Model + tuning
+    # model + hyperparameter tuning
     model = RandomForestClassifier(random_state=42)
 
     param_dist = {
@@ -72,6 +72,7 @@ def main(args):
         n_jobs=1
     )
 
+    # mlflow run
     with mlflow.start_run() as run:
         run_id = run.info.run_id
         print(f"Run ID: {run_id}")
@@ -82,7 +83,6 @@ def main(args):
         y_pred = best_model.predict(X_test)
         acc = accuracy_score(y_test, y_pred)
 
-        # manual log
         mlflow.log_metric("final_accuracy", acc)
 
         plot_confusion(y_test, y_pred)
@@ -96,7 +96,7 @@ def main(args):
         fi.to_csv("feature_importance.csv", index=False)
         mlflow.log_artifact("feature_importance.csv")
 
-        with open(os.path.join(os.getcwd(), "run_info.txt"), "w") as f:
+        with open("run_info.txt", "w") as f:
             f.write(run_id)
 
 
