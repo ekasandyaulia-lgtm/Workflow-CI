@@ -9,35 +9,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install MLflow & Dagshub
-        run: |
-          pip install mlflow==2.18.0 dagshub
+      - name: Install MLflow
+        run: pip install mlflow==2.18.0 scikit-learn pandas matplotlib seaborn
 
-      - name: Fix conda activation for MLflow
-        run: |
-          echo "MLFLOW_CONDA_HOME=/usr/share/miniconda" >> $GITHUB_ENV
+      - name: Run MLflow Project (Local Tracking)
+        run: mlflow run MLProject
 
-      - name: Run MLflow Project
-        env:
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+      - name: Get Latest Run ID
         run: |
-          mlflow run MLProject
+          RUN_ID=$(ls -td mlruns/*/* | head -n 1 | awk -F'/' '{print $(NF-1)}')
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "Using RUN_ID=$RUN_ID"
 
       - name: Docker Login
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
             -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-              
-      - name: Get Latest Run ID
-        run: |
-          RUN_ID=$(ls -td ~/.mlflow/runs/*/* | head -n 1 | awk -F'/' '{print $(NF-1)}')
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-          echo "Using RUN_ID=$RUN_ID"
 
-      - name: Build Docker Image from MLflow Model
+      - name: Build Docker Image with MLflow
         run: |
           mlflow models build-docker \
             -m runs:/$RUN_ID/model \
@@ -45,8 +36,7 @@ jobs:
             --env-manager local
 
       - name: Push Docker Image
-        run: |
-          docker push ekasandyaulia/titanic-mlflow:latest
+        run: docker push ekasandyaulia/titanic-mlflow:latest
 
       - name: Upload Training Artifacts
         uses: actions/upload-artifact@v4
