@@ -31,14 +31,14 @@ jobs:
         run: |
           mlflow run MLProject --env-manager local
 
-      - name: Get Latest RUN_ID
+      - name: Get Parent RUN_ID
         id: get_run
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          RUN_ID=$(python -c "import os, mlflow; import pandas as pd; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); r=mlflow.search_runs(order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
+          RUN_ID=$(python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); r = mlflow.search_runs(filter_string='tags.mlflow.parentRunId IS NULL', order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "RUN_ID is $RUN_ID"
 
@@ -62,7 +62,5 @@ jobs:
         run: |
           mkdir -p MLProject/artifacts/manual
           mkdir -p MLProject/artifacts/autolog
-          # Download autolog model artefacts
           mlflow artifacts download --run-id $RUN_ID --artifact-path "MLmodel" -d MLProject/artifacts/autolog
-          # Download manual artefacts
           mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts/manual
