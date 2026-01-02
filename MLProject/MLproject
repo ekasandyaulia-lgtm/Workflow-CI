@@ -1,5 +1,9 @@
 name: titanic-mlflow
+
 conda_env: conda.yaml
+
 entry_points:
   main:
-    command: "python Modelling_tunning.py"
+    command: >
+      python Modelling_tunning.py
+      --use-dagshub

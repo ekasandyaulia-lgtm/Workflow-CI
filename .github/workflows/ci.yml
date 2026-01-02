@@ -14,12 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Miniconda hanya sebagai bootstrap
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: titanic-mlflow
-          environment-file: MLProject/conda.yaml
-          python-version: "3.12"
           auto-activate-base: false
 
       - name: Install Docker
@@ -29,23 +27,22 @@ jobs:
           sudo systemctl start docker
           sudo systemctl enable docker
 
-      - name: Run Modelling Tunning
+      - name: Run MLflow Project
         shell: bash -l {0}
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
           DAGSHUB_REPO_OWNER: ${{ secrets.DAGSHUB_REPO_OWNER }}
           DAGSHUB_REPO_NAME: ${{ secrets.DAGSHUB_REPO_NAME }}
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
-        working-directory: ./MLProject
         run: |
-          python Modelling_tunning.py --mlflow-tracking-uri "$MLFLOW_TRACKING_URI" --use-dagshub
+          mlflow run MLproject
 
       - name: Upload run_id as artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: run-info
-          path: MLProject/run_info.txt
+          path: run_info.txt
 
       - name: Login to Docker Hub
         if: success()
@@ -58,10 +55,8 @@ jobs:
       - name: Build Docker Image from MLflow Model
         if: success()
         shell: bash -l {0}
-        env:
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
-          RUN_ID=$(cat MLProject/run_info.txt)
+          RUN_ID=$(cat run_info.txt)
           echo "Run ID: $RUN_ID"
           mlflow models build-docker \
             -m "runs:/$RUN_ID/model" \
