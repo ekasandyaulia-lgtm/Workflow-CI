@@ -2,11 +2,9 @@ import os
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
-
 import mlflow
 import mlflow.sklearn
 
@@ -26,11 +24,11 @@ def plot_confusion(y_true, y_pred, filename="confusion_matrix.png"):
 
 
 def main(args):
-    # mlflow setup
-    tracking_uri = args.mlflow_tracking_uri or os.environ.get(
-        "MLFLOW_TRACKING_URI", "http://127.0.0.1:5000"
+    # MLflow setup
+    mlflow.set_tracking_uri(
+        args.mlflow_tracking_uri
+        or os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
     )
-    mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment("Titanic-Advanced-Tuning")
 
     if args.use_dagshub and dagshub:
@@ -46,7 +44,7 @@ def main(args):
         disable=False
     )
 
-    # load data
+    # Load processed data
     X_train = pd.read_csv("processed_data/X_train.csv")
     X_test = pd.read_csv("processed_data/X_test.csv")
     y_train = pd.read_csv("processed_data/y_train.csv").values.ravel()
@@ -56,7 +54,7 @@ def main(args):
     X_train = X_train[num_cols]
     X_test = X_test[num_cols]
 
-    # model dan hyperparameter tuning
+    # Model + tuning
     model = RandomForestClassifier(random_state=42)
 
     param_dist = {
@@ -74,7 +72,6 @@ def main(args):
         n_jobs=1
     )
 
-    # mlflow run
     with mlflow.start_run() as run:
         run_id = run.info.run_id
         print(f"Run ID: {run_id}")
@@ -85,8 +82,8 @@ def main(args):
         y_pred = best_model.predict(X_test)
         acc = accuracy_score(y_test, y_pred)
 
-        # manual logging
-        mlflow.log_metric("accuracy_manual", acc)
+        # manual log
+        mlflow.log_metric("final_accuracy", acc)
 
         plot_confusion(y_test, y_pred)
         mlflow.log_artifact("confusion_matrix.png")
@@ -99,8 +96,7 @@ def main(args):
         fi.to_csv("feature_importance.csv", index=False)
         mlflow.log_artifact("feature_importance.csv")
 
-        # Simpan run_id untuk CI
-        with open("run_info.txt", "w") as f:
+        with open(os.path.join(os.getcwd(), "run_info.txt"), "w") as f:
             f.write(run_id)
 
 
