@@ -14,12 +14,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Miniconda hanya sebagai bootstrap
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-activate-base: false
-
+      - name: Install MLflow CLI
+        shell: bash -l {0}
+        run: |
+          pip install mlflow==2.18.0
 
       - name: Run MLflow Project
         shell: bash -l {0}
