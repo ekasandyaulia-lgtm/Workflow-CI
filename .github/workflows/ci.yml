@@ -9,11 +9,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
-          pip install mlflow==2.18.0 dagshub scikit-learn pandas matplotlib seaborn
+          pip install --upgrade pip
+          pip install \
+            mlflow==2.18.0 \
+            dagshub \
+            scikit-learn \
+            pandas \
+            matplotlib \
+            seaborn
 
       - name: Run MLflow Project
         env:
@@ -30,16 +43,24 @@ jobs:
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           RUN_ID=$(mlflow runs list \
-            --experiment-name Titanic-Advanced-Tuning \
+            --experiment-id 0 \
             --order-by attribute.start_time DESC \
             --max-results 1 \
             | awk 'NR==2 {print $1}')
+
+          if [ -z "$RUN_ID" ]; then
+            echo "❌ RUN_ID not found"
+            exit 1
+          fi
+
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "Latest RUN_ID=$RUN_ID"
 
       - name: Docker Login
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
-            -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            -u "${{ secrets.DOCKER_USERNAME }}" \
+            --password-stdin
 
       - name: Build Docker Image with MLflow
         run: |
@@ -49,10 +70,5 @@ jobs:
             --env-manager local
 
       - name: Push Docker Image
-        run: docker push ekasandyaulia/titanic-mlflow:latest
-
-      - name: Upload Training Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: training-artifacts
-          path: artifacts/
+        run: |
+          docker push ekasandyaulia/titanic-mlflow:latest
