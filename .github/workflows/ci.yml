@@ -28,10 +28,18 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+        run: python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); mlflow.run('MLProject', parameters={'some_param': 'none'}, env_manager='local')"
+
+      - name: Get Latest RUN_ID
+        id: get_run
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          RUN_ID=$(mlflow run MLProject --env-manager local -P some_param=none -q | grep "=== Run ID" | awk '{print $NF}')
+          RUN_ID=$(python -c "import os, mlflow; import pandas as pd; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); r=mlflow.search_runs(order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-          echo "Latest RUN_ID=$RUN_ID"
+          echo "RUN_ID is $RUN_ID"
 
       - name: Docker Login
         run: |
@@ -51,4 +59,5 @@ jobs:
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           mkdir -p MLProject/artifacts
-          mlflow artifacts download --run-id $RUN_ID --artifact-path artifacts -d MLProject/artifacts
+          mlflow artifacts download --run-id $RUN_ID --artifact-path "model" -d MLProject/artifacts
+          mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts
