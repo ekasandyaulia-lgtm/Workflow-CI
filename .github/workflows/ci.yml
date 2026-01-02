@@ -23,11 +23,16 @@ jobs:
           pip install mlflow==2.18.0 dagshub scikit-learn pandas matplotlib seaborn
 
       - name: Run MLflow Project
+        id: run_mlflow
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
-        run: mlflow run MLProject --env-manager local
+        run: |
+          mlflow run MLProject --env-manager local -P some_param=none
+          MODEL_PATH=$(ls -d MLProject/artifacts/model/)
+          echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
+
 
       - name: Get Latest RUN_ID
         id: get_run
@@ -46,7 +51,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          mlflow models build-docker -m runs:/$RUN_ID/model -n ekasandyaulia/titanic-mlflow:latest --env-manager local
+          mlflow models build-docker -m $MODEL_PATH -n ekasandyaulia/titanic-mlflow:latest --env-manager local
 
       - name: Push Docker Image
         run: docker push ekasandyaulia/titanic-mlflow:latest
@@ -55,4 +60,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: training-artifacts
-          path: artifacts/
+          path: MLProject/artifacts/

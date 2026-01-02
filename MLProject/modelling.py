@@ -22,8 +22,8 @@ X_test  = pd.read_csv(os.path.join(DATA_DIR, "X_test.csv"))
 y_train = pd.read_csv(os.path.join(DATA_DIR, "y_train.csv")).values.ravel()
 y_test  = pd.read_csv(os.path.join(DATA_DIR, "y_test.csv")).values.ravel()
 
-X_train = X_train.select_dtypes(include=["int64", "float64"])
-X_test  = X_test.select_dtypes(include=["int64", "float64"])
+X_train = X_train.select_dtypes(include=["int64", "float64"]).astype(float)
+X_test  = X_test.select_dtypes(include=["int64", "float64"]).astype(float)
 
 # Folder artefak
 os.makedirs("artifacts", exist_ok=True)
