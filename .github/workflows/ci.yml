@@ -16,13 +16,13 @@ jobs:
           pip install mlflow==2.18.0 scikit-learn pandas matplotlib seaborn
 
       - name: Run MLflow Project
-        run: mlflow run MLProject
+        run: |
+          mlflow run MLProject --env-manager local
 
       - name: Get Latest Run ID
         run: |
           RUN_ID=$(ls -td mlruns/*/* | head -n 1 | awk -F'/' '{print $(NF-1)}')
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-          echo "Using RUN_ID=$RUN_ID"
 
       - name: Docker Login
         run: |
@@ -43,4 +43,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: training-artifacts
-          path: MLProject/artifacts/
+          path: artifacts/
