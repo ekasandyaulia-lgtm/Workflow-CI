@@ -10,14 +10,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 
 # dagshub integration
+os.environ["MLFLOW_TRACKING_USERNAME"] = "ekasandyaulia-lgtm"
+os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("DAGSHUB_TOKEN")
+
 mlflow.set_tracking_uri(
     "https://dagshub.com/ekasandyaulia-lgtm/SMLS_Eka_Sandy_Aulia_Puspitasari.mlflow"
-)
-
-dagshub.init(
-    repo_owner="ekasandyaulia-lgtm",
-    repo_name="SMLS_Eka_Sandy_Aulia_Puspitasari",
-    mlflow=True
 )
 
 mlflow.set_experiment("Titanic-Advanced-Tuning")
