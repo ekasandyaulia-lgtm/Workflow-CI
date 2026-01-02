@@ -28,7 +28,8 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
-        run: python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); mlflow.run('MLProject', parameters={'some_param': 'none'}, env_manager='local')"
+        run: |
+          mlflow run MLProject --env-manager local
 
       - name: Get Latest RUN_ID
         id: get_run
@@ -50,14 +51,16 @@ jobs:
           mlflow models build-docker -m "runs:/$RUN_ID/model" -n ekasandyaulia/titanic-mlflow:latest --env-manager local
 
       - name: Push Docker Image
-        run: docker push ekasandyaulia/titanic-mlflow:latest
+        run: |
+          docker push ekasandyaulia/titanic-mlflow:latest
 
-      - name: Download & Upload Training Artifacts
+      - name: Download Training Artefacts
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           mkdir -p MLProject/artifacts
-          mlflow artifacts download --run-id $RUN_ID --artifact-path "model" -d MLProject/artifacts
-          mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts
+          mlflow artifacts download --run-id $RUN_ID --artifact-path "model" -d MLProject/artifacts/model
+          # Artefak manual (confusion matrix & feature importance)
+          mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts/manual
