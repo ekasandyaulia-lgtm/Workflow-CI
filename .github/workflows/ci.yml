@@ -29,19 +29,7 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          mlflow run MLProject --env-manager local -P some_param=none
-          MODEL_PATH=$(ls -d MLProject/artifacts/model/)
-          echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
-
-
-      - name: Get Latest RUN_ID
-        id: get_run
-        env:
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
-          MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
-        run: |
-          RUN_ID=$(python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); r=mlflow.search_runs(order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
+          RUN_ID=$(mlflow run MLProject --env-manager local -P some_param=none -q | grep "=== Run ID" | awk '{print $NF}')
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "Latest RUN_ID=$RUN_ID"
 
@@ -51,13 +39,16 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          mlflow models build-docker -m $MODEL_PATH -n ekasandyaulia/titanic-mlflow:latest --env-manager local
+          mlflow models build-docker -m "runs:/$RUN_ID/model" -n ekasandyaulia/titanic-mlflow:latest --env-manager local
 
       - name: Push Docker Image
         run: docker push ekasandyaulia/titanic-mlflow:latest
 
-      - name: Upload Training Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: training-artifacts
-          path: MLProject/artifacts/
+      - name: Download & Upload Training Artifacts
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          mkdir -p MLProject/artifacts
+          mlflow artifacts download --run-id $RUN_ID --artifact-path artifacts -d MLProject/artifacts
