@@ -48,7 +48,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          mlflow models build-docker -m "runs:/$RUN_ID/model" -n ekasandyaulia/titanic-mlflow:latest --env-manager local
+          mlflow models build-docker -m "runs:/$RUN_ID/MLmodel" -n ekasandyaulia/titanic-mlflow:latest --env-manager local
 
       - name: Push Docker Image
         run: |
@@ -60,7 +60,9 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          mkdir -p MLProject/artifacts
-          mlflow artifacts download --run-id $RUN_ID --artifact-path "model" -d MLProject/artifacts/model
-          # Artefak manual (confusion matrix & feature importance)
+          mkdir -p MLProject/artifacts/manual
+          mkdir -p MLProject/artifacts/autolog
+          # Download autolog model artefacts
+          mlflow artifacts download --run-id $RUN_ID --artifact-path "MLmodel" -d MLProject/artifacts/autolog
+          # Download manual artefacts
           mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts/manual
