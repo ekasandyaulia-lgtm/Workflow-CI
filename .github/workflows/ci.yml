@@ -44,6 +44,20 @@ jobs:
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "RUN_ID is $RUN_ID"
 
+      - name: Wait before downloading artefacts
+        run: |
+          echo "=== Tunggu 10 detik sebelum download artefak ==="
+          sleep 10
+
+      - name: List artefacts before download
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          echo "=== List artefacts in parent RUN_ID ==="
+          mlflow artifacts list --run-id $RUN_ID || echo "Tidak ada artefak atau server sibuk"
+
       - name: Download Training Artefacts
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
@@ -53,8 +67,22 @@ jobs:
           echo "=== Download artefak MLflow ==="
           mkdir -p MLProject/artifacts/manual
           mkdir -p MLProject/artifacts/autolog
-          mlflow artifacts download --run-id $RUN_ID --artifact-path "MLmodel" -d MLProject/artifacts/autolog
-          mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts/manual
+
+          # Retry loop untuk MLmodel supaya tidak erorr download
+          for i in {1..5}; do
+              echo "Attempt $i to download MLmodel..."
+              mlflow artifacts download --run-id $RUN_ID --artifact-path "MLmodel" -d MLProject/artifacts/autolog && break
+              echo "Retry in 5 seconds..."
+              sleep 5
+          done
+
+          # Retry loop untuk manual artifacts
+          for i in {1..5}; do
+              echo "Attempt $i to download manual artifacts..."
+              mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts/manual && break
+              echo "Retry in 5 seconds..."
+              sleep 5
+          done
 
       - name: List artefak after MLflow run
         run: |
