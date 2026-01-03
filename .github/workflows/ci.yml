@@ -75,6 +75,7 @@ jobs:
           mkdir -p MLProject/artifacts/manual
           mkdir -p MLProject/artifacts/autolog
 
+          # Download MLmodel (autolog)
           for i in {1..5}; do
               echo "Attempt $i to download MLmodel..."
               mlflow artifacts download --run-id $RUN_ID --artifact-path "MLmodel" -d MLProject/artifacts/autolog && break
@@ -82,9 +83,10 @@ jobs:
               sleep 5
           done
 
+          # Download manual artefacts
           for i in {1..5}; do
               echo "Attempt $i to download manual artifacts..."
-              mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts/manual && break
+              mlflow artifacts download --run-id $RUN_ID --artifact-path "manual" -d MLProject/artifacts/manual && break
               echo "Retry in 5 seconds..."
               sleep 5
           done
