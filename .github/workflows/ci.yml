@@ -40,7 +40,7 @@ jobs:
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           echo "=== Mengambil Parent RUN_ID terbaru ==="
-          RUN_ID=$(python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); r = mlflow.search_runs(filter_string='tags.mlflow.parentRunId IS NULL', order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
+          RUN_ID=$(python -c "import os, mlflow, pandas as pd; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); runs = mlflow.search_runs(order_by=['start_time DESC']); print([r.run_id for idx, r in runs.iterrows() if pd.isna(r.get('tags.mlflow.parentRunId'))][0])")
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "RUN_ID is $RUN_ID"
 
