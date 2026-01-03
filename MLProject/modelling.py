@@ -12,8 +12,8 @@ mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
 mlflow.set_tracking_uri(mlflow_tracking_uri)
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
-# Autolog dengan log_models=True
-mlflow.sklearn.autolog(log_models=True)
+# autolog metrics and models
+mlflow.sklearn.autolog(log_models=True)  
 
 # Load Dataset
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,7 +35,6 @@ os.makedirs(ARTIFACT_DIR, exist_ok=True)
 n_estimators_list = [50, 100]
 max_depth_list = [5, 10]
 
-# Grid search results CSV
 grid_results = []
 
 # Run MLflow
@@ -43,10 +42,13 @@ with mlflow.start_run() as parent_run:
     mlflow.set_tag("project", "Titanic-Advanced-Tuning")
     mlflow.set_tag("author", "ekasandyaulia-lgtm")
 
+    nested_runs_models = {}
+
+    # Nested run untuk grid search
     for n_estimators in n_estimators_list:
         for max_depth in max_depth_list:
             with mlflow.start_run(nested=True):
-                # Log hyperparams
+                # Log hyperparameters
                 mlflow.log_param("n_estimators", n_estimators)
                 mlflow.log_param("max_depth", max_depth)
 
@@ -74,7 +76,10 @@ with mlflow.start_run() as parent_run:
                 mlflow.log_artifact(cm_path, artifact_path="manual")
 
                 # Feature importance
-                fi = pd.DataFrame({"feature": X_train.columns, "importance": model.feature_importances_})
+                fi = pd.DataFrame({
+                    "feature": X_train.columns,
+                    "importance": model.feature_importances_
+                })
                 fi_path = os.path.join(ARTIFACT_DIR, f"fi_{n_estimators}_{max_depth}.csv")
                 fi.to_csv(fi_path, index=False)
                 mlflow.log_artifact(fi_path, artifact_path="manual")
@@ -86,9 +91,25 @@ with mlflow.start_run() as parent_run:
                     "accuracy": acc
                 })
 
-grid_results_df = pd.DataFrame(grid_results)
-grid_results_path = os.path.join(ARTIFACT_DIR, "grid_results.csv")
-grid_results_df.to_csv(grid_results_path, index=False)
-mlflow.log_artifact(grid_results_path, artifact_path="manual")
+                # Simpan model sementara
+                nested_runs_models[(n_estimators, max_depth)] = model
+
+    # Simpan grid results
+    grid_results_df = pd.DataFrame(grid_results)
+    grid_results_path = os.path.join(ARTIFACT_DIR, "grid_results.csv")
+    grid_results_df.to_csv(grid_results_path, index=False)
+    mlflow.log_artifact(grid_results_path, artifact_path="manual")
+
+    # Log model terbaik di parent run
+    best_result = max(grid_results, key=lambda x: x["accuracy"])
+    best_n_estimators = best_result["n_estimators"]
+    best_max_depth = best_result["max_depth"]
+
+    best_model = nested_runs_models[(best_n_estimators, best_max_depth)]
+    mlflow.sklearn.log_model(
+        best_model,
+        artifact_path="MLmodel",
+        registered_model_name="Titanic_RF_Model"
+    )
 
 print("Model berhasil! RUN_ID induk:", parent_run.info.run_id)
