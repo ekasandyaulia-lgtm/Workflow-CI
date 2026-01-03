@@ -29,6 +29,7 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
+          echo "=== Menjalankan MLflow Project ==="
           mlflow run MLProject --env-manager local
 
       - name: Get Parent RUN_ID
@@ -38,28 +39,10 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          RUN_ID=$(python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']);r = mlflow.search_runs(order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
+          echo "=== Mengambil RUN_ID terbaru ==="
+          RUN_ID=$(python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); r = mlflow.search_runs(order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "RUN_ID is $RUN_ID"
-      
-      - name: List artefak after MLflow run
-        run: |
-          echo "Artefak MLmodel:"
-          ls -R MLProject/artifacts/autolog
-          echo "Artefak manual:"
-          ls -R MLProject/artifacts/manual
-
-      - name: Docker Login
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build Docker Image
-        run: |
-          mlflow models build-docker -m "runs:/$RUN_ID/MLmodel" -n ekasandyaulia/titanic-mlflow:latest --env-manager local
-
-      - name: Push Docker Image
-        run: |
-          docker push ekasandyaulia/titanic-mlflow:latest
 
       - name: Download Training Artefacts
         env:
@@ -67,7 +50,29 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
+          echo "=== Download artefak MLflow ==="
           mkdir -p MLProject/artifacts/manual
           mkdir -p MLProject/artifacts/autolog
           mlflow artifacts download --run-id $RUN_ID --artifact-path "MLmodel" -d MLProject/artifacts/autolog
           mlflow artifacts download --run-id $RUN_ID --artifact-path "artifacts" -d MLProject/artifacts/manual
+
+      - name: List artefak after MLflow run
+        run: |
+          echo "=== Artefak MLmodel (autolog) ==="
+          ls -R MLProject/artifacts/autolog || echo "Folder autolog kosong"
+          echo "=== Artefak manual ==="
+          ls -R MLProject/artifacts/manual || echo "Folder manual kosong"
+
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          echo "=== Build Docker Image ==="
+          mlflow models build-docker -m "runs:/$RUN_ID/MLmodel" -n ekasandyaulia/titanic-mlflow:latest --env-manager local
+
+      - name: Push Docker Image
+        run: |
+          echo "=== Push Docker Image ke Docker Hub ==="
+          docker push ekasandyaulia/titanic-mlflow:latest
