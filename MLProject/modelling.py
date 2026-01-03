@@ -15,7 +15,7 @@ mlflow.set_experiment("Titanic-Advanced-Tuning")
 # Autolog dengan log_models=True
 mlflow.sklearn.autolog(log_models=True)
 
-# Load dataset
+# Load Dataset
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "processed_data")
 
@@ -38,17 +38,19 @@ max_depth_list = [5, 10]
 # Grid search results CSV
 grid_results = []
 
-# run MLflow
+# Run MLflow
 with mlflow.start_run() as parent_run:
+    mlflow.set_tag("project", "Titanic-Advanced-Tuning")
+    mlflow.set_tag("author", "ekasandyaulia-lgtm")
 
     for n_estimators in n_estimators_list:
         for max_depth in max_depth_list:
             with mlflow.start_run(nested=True):
-                # log hyperparams
+                # Log hyperparams
                 mlflow.log_param("n_estimators", n_estimators)
                 mlflow.log_param("max_depth", max_depth)
 
-                # train model
+                # Train model
                 model = RandomForestClassifier(
                     n_estimators=n_estimators,
                     max_depth=max_depth,
@@ -56,7 +58,7 @@ with mlflow.start_run() as parent_run:
                 )
                 model.fit(X_train, y_train)
 
-                # metrics
+                # Metrics
                 y_pred = model.predict(X_test)
                 acc = accuracy_score(y_test, y_pred)
                 mlflow.log_metric("accuracy", acc)
@@ -77,7 +79,7 @@ with mlflow.start_run() as parent_run:
                 fi.to_csv(fi_path, index=False)
                 mlflow.log_artifact(fi_path, artifact_path="manual")
 
-                # simpan ke grid_results
+                # Simpan ke grid_results
                 grid_results.append({
                     "n_estimators": n_estimators,
                     "max_depth": max_depth,
