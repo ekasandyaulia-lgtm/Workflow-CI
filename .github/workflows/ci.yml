@@ -75,7 +75,6 @@ jobs:
           mkdir -p MLProject/artifacts/manual
           mkdir -p MLProject/artifacts/autolog
 
-          # Download MLmodel (autolog)
           for i in {1..5}; do
               echo "Attempt $i to download MLmodel..."
               mlflow artifacts download --run-id $RUN_ID --artifact-path "MLmodel" -d MLProject/artifacts/autolog && break
@@ -83,7 +82,6 @@ jobs:
               sleep 5
           done
 
-          # Download manual artefacts
           for i in {1..5}; do
               echo "Attempt $i to download manual artifacts..."
               mlflow artifacts download --run-id $RUN_ID --artifact-path "manual" -d MLProject/artifacts/manual && break
@@ -103,14 +101,16 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
+          echo "=== DOCKER_USERNAME check ==="
+          echo "$DOCKER_USERNAME"
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - name: Build Docker Image
         run: |
           echo "=== Build Docker Image ==="
-          mlflow models build-docker -m "runs:/$RUN_ID/MLmodel" -n $DOCKER_USERNAME/titanic-mlflow:latest --env-manager local
+          mlflow models build-docker -m "runs:/$RUN_ID/MLmodel" -n "${DOCKER_USERNAME}/titanic-mlflow:latest" --env-manager local
 
       - name: Push Docker Image
         run: |
           echo "=== Push Docker Image ke Docker Hub ==="
-          docker push $DOCKER_USERNAME/titanic-mlflow:latest
+          docker push "${DOCKER_USERNAME}/titanic-mlflow:latest"
