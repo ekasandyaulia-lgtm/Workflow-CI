@@ -38,9 +38,16 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ekasandyaulia-lgtm
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          RUN_ID=$(python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']); r = mlflow.search_runs(filter_string='tags.mlflow.parentRunId IS NULL', order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
+          RUN_ID=$(python -c "import os, mlflow; mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI']);r = mlflow.search_runs(order_by=['start_time DESC'], max_results=1); print(r.iloc[0].run_id)")
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "RUN_ID is $RUN_ID"
+      
+      - name: List artefak after MLflow run
+        run: |
+          echo "Artefak MLmodel:"
+          ls -R MLProject/artifacts/autolog
+          echo "Artefak manual:"
+          ls -R MLProject/artifacts/manual
 
       - name: Docker Login
         run: |
