@@ -12,10 +12,10 @@ mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
 mlflow.set_tracking_uri(mlflow_tracking_uri)
 mlflow.set_experiment("Titanic-Advanced-Tuning")
 
-# Autolog dan log_models
+# Autolog dengan log_models=True
 mlflow.sklearn.autolog(log_models=True)
 
-# Loading dataset
+# Load dataset
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "processed_data")
 
@@ -35,17 +35,20 @@ os.makedirs(ARTIFACT_DIR, exist_ok=True)
 n_estimators_list = [50, 100]
 max_depth_list = [5, 10]
 
+# Grid search results CSV
+grid_results = []
+
 # run MLflow
 with mlflow.start_run() as parent_run:
-    mlflow.set_tag("mlflow.parentRunId", parent_run.info.run_id)
 
     for n_estimators in n_estimators_list:
         for max_depth in max_depth_list:
             with mlflow.start_run(nested=True):
+                # log hyperparams
                 mlflow.log_param("n_estimators", n_estimators)
                 mlflow.log_param("max_depth", max_depth)
 
-                # Model
+                # train model
                 model = RandomForestClassifier(
                     n_estimators=n_estimators,
                     max_depth=max_depth,
@@ -53,12 +56,12 @@ with mlflow.start_run() as parent_run:
                 )
                 model.fit(X_train, y_train)
 
-                # Metrics manual
+                # metrics
                 y_pred = model.predict(X_test)
                 acc = accuracy_score(y_test, y_pred)
                 mlflow.log_metric("accuracy", acc)
 
-                # Confusion matrix manual
+                # Confusion matrix
                 cm = confusion_matrix(y_test, y_pred)
                 cm_path = os.path.join(ARTIFACT_DIR, f"cm_{n_estimators}_{max_depth}.png")
                 plt.figure(figsize=(5, 4))
@@ -66,12 +69,24 @@ with mlflow.start_run() as parent_run:
                 plt.title(f"Confusion Matrix n={n_estimators} d={max_depth}")
                 plt.savefig(cm_path)
                 plt.close()
-                mlflow.log_artifact(cm_path)
+                mlflow.log_artifact(cm_path, artifact_path="manual")
 
-                # Feature importance manual
+                # Feature importance
                 fi = pd.DataFrame({"feature": X_train.columns, "importance": model.feature_importances_})
                 fi_path = os.path.join(ARTIFACT_DIR, f"fi_{n_estimators}_{max_depth}.csv")
                 fi.to_csv(fi_path, index=False)
-                mlflow.log_artifact(fi_path)
+                mlflow.log_artifact(fi_path, artifact_path="manual")
+
+                # simpan ke grid_results
+                grid_results.append({
+                    "n_estimators": n_estimators,
+                    "max_depth": max_depth,
+                    "accuracy": acc
+                })
+
+grid_results_df = pd.DataFrame(grid_results)
+grid_results_path = os.path.join(ARTIFACT_DIR, "grid_results.csv")
+grid_results_df.to_csv(grid_results_path, index=False)
+mlflow.log_artifact(grid_results_path, artifact_path="manual")
 
 print("Model berhasil! RUN_ID induk:", parent_run.info.run_id)
