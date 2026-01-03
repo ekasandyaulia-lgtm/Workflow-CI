@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install mlflow==2.18.0 dagshub scikit-learn pandas matplotlib seaborn
+          pip install mlflow==2.18.0 dagshub scikit-learn==1.5.2 pandas matplotlib seaborn
 
       - name: Set Environment Variables
         run: |
@@ -28,6 +28,8 @@ jobs:
           echo "DAGSHUB_REPO_NAME=${{ secrets.DAGSHUB_REPO_NAME }}" >> $GITHUB_ENV
           echo "DAGSHUB_REPO_OWNER=${{ secrets.DAGSHUB_REPO_OWNER }}" >> $GITHUB_ENV
           echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> $GITHUB_ENV
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_ENV
+          echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}" >> $GITHUB_ENV
 
       - name: Run MLflow Project
         id: run_mlflow
